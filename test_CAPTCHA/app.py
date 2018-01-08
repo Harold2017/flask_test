@@ -6,6 +6,7 @@ from wtforms.validators import Required, Length, Email, Regexp, EqualTo
 from wtforms import ValidationError
 import pygeoip
 import os
+from werkzeug.contrib.fixers import ProxyFix
 
 
 ip_data_path = os.path.abspath(r"GeoIP/GeoIP.dat")
@@ -13,6 +14,7 @@ GEOIP = pygeoip.GeoIP(ip_data_path, pygeoip.MEMORY_CACHE)
 
 
 app = Flask(__name__)
+app.wsgi_app = ProxyFix(app.wsgi_app)
 
 
 class Config:
