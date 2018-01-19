@@ -1,0 +1,250 @@
+{% extends "bootstrap/base.html" %}
+{% import "bootstrap/wtf.html" as wtf %}
+
+{% block title %}Test{% endblock %}
+
+{% block head %}
+{{ super() }}
+<style>
+
+	body {
+		margin: 0;
+		padding: 0;
+		font-family: "Lucida Grande",Helvetica,Arial,Verdana,sans-serif;
+		font-size: 14px;
+	}
+
+	#script-warning {
+		display: none;
+		background: #eee;
+		border-bottom: 1px solid #ddd;
+		padding: 0 10px;
+		line-height: 40px;
+		text-align: center;
+		font-weight: bold;
+		font-size: 12px;
+		color: red;
+	}
+
+	#loading {
+		display: none;
+		position: absolute;
+		top: 10px;
+		right: 10px;
+	}
+
+	#calendar {
+		max-width: 900px;
+		margin: 40px auto;
+		padding: 0 10px;
+	}
+
+</style>
+<link href="//cdnjs.cloudflare.com/ajax/libs/fullcalendar/3.8.0/fullcalendar.min.css" rel='stylesheet' />
+<link href="//cdnjs.cloudflare.com/ajax/libs/fullcalendar/3.8.0/fullcalendar.print.css" rel='stylesheet' media='print' />
+<link href="//cdnjs.cloudflare.com/ajax/libs/bootstrap-datetimepicker/4.17.47/css/bootstrap-datetimepicker.min.css" rel="stylesheet">
+{% endblock %}
+
+{% block content %}
+<div class="container">
+    {% for message in get_flashed_messages() %}
+    <div class="alert alert-warning">
+        <button type="button" class="close" data-dismiss="alert">&times;</button>
+        {{ message }}
+    </div>
+    {% endfor %}
+
+    {% block page_content %}
+        <div id='script-warning'>
+		Error getting data from <code>/data</code> endpoint.
+	</div>
+
+	<div id='loading'>loading...</div>
+
+	<div id='calendar'></div>
+
+    <div class="container">
+    <div class='col-md-5'>
+        <div class="form-group">
+            <div class='input-group date' id='start_time'>
+                <label>Start time</label>
+                <input type='text' class="form-control" id='start_time_data'/>
+                <span class="input-group-addon">
+                    <span class="glyphicon glyphicon-calendar"></span>
+                </span>
+            </div>
+        </div>
+    </div>
+    <div class='col-md-5'>
+        <div class="form-group">
+            <div class='input-group date' id='end_time'>
+                <label>End time</label>
+                <input type='text' class="form-control" id='end_time_data'/>
+                <span class="input-group-addon">
+                    <span class="glyphicon glyphicon-calendar"></span>
+                </span>
+            </div>
+        </div>
+    </div>
+    <div class='col-md-5'>
+        <div class="form-group">
+                <label>Name</label>
+                <input type='text' class="form-control required" id='name'/>
+        </div>
+    </div>
+    </div>
+
+    <br/>
+
+    <div class="container">
+        <button class="btn btn-default btn-file" id="appoint">
+            Appoint
+        </button>
+    </div>
+{% endblock %}
+{% endblock %}
+
+
+{% block scripts %}
+{{ super() }}
+<script src="//cdnjs.cloudflare.com/ajax/libs/moment.js/2.20.1/moment.min.js"></script>
+<script src="//cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+<script src="//cdnjs.cloudflare.com/ajax/libs/fullcalendar/3.8.0/fullcalendar.min.js"></script>
+<script src="//cdnjs.cloudflare.com/ajax/libs/moment.js/2.20.1/moment-with-locales.min.js"></script>
+<script src="//cdnjs.cloudflare.com/ajax/libs/bootstrap-datetimepicker/4.17.47/js/bootstrap-datetimepicker.min.js"></script>
+
+<script>
+	$(document).ready(function() {
+
+		$('#calendar').fullCalendar({
+			header: {
+				left: 'prev,next today',
+				center: 'title',
+				right: 'month,agendaWeek,agendaDay,listDay'
+			},
+			weekends: false,
+			listDayFormat: true,
+			// defaultDate: Date(),
+			editable: true,
+			eventLimit: true, // allow "more" link when too many events
+			events: {
+				url: 'data',
+				error: function() {
+					$('#script-warning').show();
+				}
+			},
+			businessHours: {
+    		// days of week. an array of zero-based day of week integers (0=Sunday)
+    		dow: [ 1, 2, 3, 4, 5 ], // Monday - Thursday
+
+    		start: '9:00', // a start time
+    		end: '17:30', // an end time
+			},
+			loading: function(bool) {
+				$('#loading').toggle(bool);
+			},
+			/*dayClick: function(date,allDay,jsEvent,view) {
+				$(this).css('background-color', 'red');
+				var selDate = $.fullCalendar.formatDate(date,"YYYY-MM-DD");
+				alert(selDate);
+				$('#calendar').fullCalendar('changeView', 'agendaDay', selDate);
+			},
+			eventClick: function(calEvent, jsEvent, view) {
+				//alert('Event: ' + calEvent.title);
+				alert('View: ' + view.name);
+				if (view.name == 'agendaDay') {
+				    $(this).css('border-color', 'green');
+				}
+				else {
+				    $(this).css('border-color', 'red');
+				};
+			}*/
+
+		});
+
+	});
+
+/*$('#start_time').datetimepicker({
+        daysOfWeekDisabled: [0, 6],
+        inline: true,
+        sideBySide: true,
+        stepping: 30
+        });
+
+$('#end_time').datetimepicker({
+        daysOfWeekDisabled: [0, 6],
+        inline: true,
+        sideBySide: true,
+        stepping: 30
+        });*/
+
+$('#start_time').datetimepicker({
+    daysOfWeekDisabled: [0, 6],
+    stepping: 30
+});
+$('#end_time').datetimepicker({
+            useCurrent: false, //Important! See issue #1075
+            daysOfWeekDisabled: [0, 6],
+            stepping: 30
+        });
+$("#start_time").on("dp.change", function (e) {
+            $('#end_time').data("DateTimePicker").minDate(e.date);
+        });
+$("#end_time").on("dp.change", function (e) {
+            $('#start_time').data("DateTimePicker").maxDate(e.date);
+        });
+
+$('#appoint').on('click', function(e){
+    var start_time = $('#start_time_data').val();
+    //console.log(start_time);
+    start_time = new Date(start_time);
+    // start_time = start_time.toISOString();
+    //console.log(start_time);
+    var end_time = $('#end_time_data').val();
+    end_time = new Date(end_time);
+    //console.log(end_time);
+    var title = $('#name').val();
+    console.log(title);
+    event = {
+    "title": title,
+    "start": start_time,
+    "end": end_time,
+    };
+    events = $('#calendar').fullCalendar( 'clientEvents');
+    console.log(events);
+    var x;
+    var cnt=0;
+    for (x in events) {
+        if (x.title == title) {
+           cnt = cnt + 1;
+        }
+    }; // first try to find whether conflict exists: two ways: 1. events in fullcalendar; 2. send event to server and see the callback
+    if (cnt > 0) {
+        $('#calendar').fullCalendar('renderEvent', event);
+    };
+    //$('#calendar').fullCalendar('renderEvent', event);
+    var url = "{{ url_for('add_data') }}";
+    var data = {
+        "start": start_time,
+        "end": end_time
+    };
+    console.log(data);
+    $.ajax({
+        type: 'POST',
+        url: url,
+        data: JSON.stringify(data),
+        contentType: 'application/json; charset=UTF-8',
+        dataType:'json',
+        timeout: 10000,
+        success: function(data) {
+            alert("Success");
+            console.log(data);
+        },
+        error: function(xhr, type) {
+        }
+
+    });
+});
+
+</script>
+{% endblock %}
