@@ -1,0 +1,69 @@
+{% extends "bootstrap/base.html" %}
+{% import "bootstrap/wtf.html" as wtf %}
+
+{% block title %}Test{% endblock %}
+
+{% block head %}
+{{ super() }}
+<link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='styles.css') }}">
+<link href="//cdnjs.cloudflare.com/ajax/libs/bootstrap-datetimepicker/4.17.47/css/bootstrap-datetimepicker-standalone.min.css" rel="stylesheet">
+{% endblock %}
+
+{% block content %}
+<div class="container">
+    {% for message in get_flashed_messages() %}
+    <div class="alert alert-warning">
+        <button type="button" class="close" data-dismiss="alert">&times;</button>
+        {{ message }}
+    </div>
+    {% endfor %}
+
+    {% block page_content %}
+        <div>
+            {{ wtf.form_field(form.name) }}
+            {{ wtf.form_field(form.phone) }}
+            {{ wtf.form_field(form.photoset) }}
+
+            <!--div class='input-group date' id='time'-->
+            <!--input type='text' class="form-control" id="time" /-->
+            <div class="col-sm-6 required">
+                    <input type='text' class="form-control" id="time" />
+                    <!--span class="input-group-addon">
+                        <span class="glyphicon glyphicon-calendar"></span>
+                    </span-->
+            </div>
+
+
+            {{ wtf.form_field(form.submit) }}
+            {{ form.csrf_token }}
+
+</div>
+    {% for field in form.errors %}
+{% for error in form.errors[field] %}
+    <div class="alert alert-error">
+        <strong>Error!</strong> {{error}}
+    </div>
+{% endfor %}
+{% endfor %}
+{% endblock %}
+{% endblock %}
+
+{% block scripts %}
+{{ super() }}
+<script src="//cdnjs.cloudflare.com/ajax/libs/moment.js/2.20.1/moment.min.js"></script>
+<script src="//cdnjs.cloudflare.com/ajax/libs/moment.js/2.20.1/moment-with-locales.min.js"></script>
+<script src="//cdnjs.cloudflare.com/ajax/libs/bootstrap-datetimepicker/4.17.47/js/bootstrap-datetimepicker.min.js"></script>
+<script type="text/javascript">
+        $('#time').datetimepicker({
+        daysOfWeekDisabled: [0, 6],
+        /*icons: {
+                    time: "fa fa-clock-o",
+                    date: "fa fa-calendar",
+                    up: "fa fa-arrow-up",
+                    down: "fa fa-arrow-down"
+                }*/
+        inline: true,
+        sideBySide: true
+        });
+</script>
+{% endblock %}
