@@ -1,13 +1,13 @@
 [
   {
-    "title": "All Day Event",
-    "start": "2014-09-01"
-  },
-  {
     "title": "Long Event",
     "start": "2014-09-07",
     "end": "2014-09-10"
   },
+  {
+      "title": "All Day Event",
+      "start": "2014-09-01"
+    },
   {
     "id": "999",
     "title": "Repeating Event",

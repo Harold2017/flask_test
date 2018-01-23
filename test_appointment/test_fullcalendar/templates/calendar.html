@@ -210,21 +210,22 @@ $('#appoint').on('click', function(e){
     "start": start_time,
     "end": end_time,
     };
-    events = $('#calendar').fullCalendar( 'clientEvents');
+    /*events = $('#calendar').fullCalendar( 'clientEvents');
     console.log(events);
-    var x;
     var cnt=0;
-    for (x in events) {
+    for (let x of events) {
         if (x.title == title) {
            cnt = cnt + 1;
         }
     }; // first try to find whether conflict exists: two ways: 1. events in fullcalendar; 2. send event to server and see the callback
-    if (cnt > 0) {
+    if (cnt = 0) {
         $('#calendar').fullCalendar('renderEvent', event);
     };
     //$('#calendar').fullCalendar('renderEvent', event);
+    */
     var url = "{{ url_for('add_data') }}";
     var data = {
+        "title": title,
         "start": start_time,
         "end": end_time
     };
@@ -236,9 +237,14 @@ $('#appoint').on('click', function(e){
         contentType: 'application/json; charset=UTF-8',
         dataType:'json',
         timeout: 10000,
-        success: function(data) {
-            alert("Success");
-            console.log(data);
+        success: function(result) {
+            r = JSON.parse(result);
+            if (r["blocked"] == 0) {
+                alert("Success");
+            } else {
+                alert("Failed");
+            }
+            // console.log(result);
         },
         error: function(xhr, type) {
         }
