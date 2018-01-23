@@ -80,12 +80,13 @@ def add_data():
     for event in events:
         if start_date <= event.start <= event.end:  # TypeError: unorderable types: str() <= datetime.datetime()
             print("Invalid")
-            return jsonify({'blocked': 1})
+            # print(jsonify({"blocked": 1}))
+            return jsonify({"blocked": 1})
     print(title, start_date, end_date)
     event_new = Event(start=start_date, end=end_date)
     db.session.add(event_new)
     db.session.commit()
-    return jsonify({'blocked': 0})
+    return jsonify({"blocked": 0})
 
 
 if __name__ == '__main__':

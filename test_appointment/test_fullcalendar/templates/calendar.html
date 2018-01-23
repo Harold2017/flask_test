@@ -238,7 +238,9 @@ $('#appoint').on('click', function(e){
         dataType:'json',
         timeout: 10000,
         success: function(result) {
-            r = JSON.parse(result);
+            console.log(result);
+            // let r = JSON.parse(result);
+            let r = result;
             if (r["blocked"] == 0) {
                 alert("Success");
             } else {
