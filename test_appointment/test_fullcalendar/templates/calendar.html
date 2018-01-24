@@ -101,6 +101,21 @@
             Appoint
         </button>
     </div>
+
+    <div class="container">
+        <div class='col-md-5'>
+        <div class="form-group">
+                <label>Event ID</label>
+                <input type='text' class="form-control required" id='event_id'/>
+        </div>
+        </div>
+        </div>
+        <div class="container">
+        <button class="btn btn-default btn-file" id="cancel">
+            Cancel
+        </button>
+    </div>
+    </div>
 {% endblock %}
 {% endblock %}
 
@@ -127,11 +142,19 @@
 			// defaultDate: Date(),
 			editable: true,
 			eventLimit: true, // allow "more" link when too many events
+			timezone: 'local', // utctime from server, then transfer to local time
 			events: {
 				url: 'data',
+				/*type: 'post',
+				data: {
+				    start: 100,
+				    end: moment().add(14, 'days')
+				},*/
 				error: function() {
 					$('#script-warning').show();
-				}
+				},
+				color: 'yellow',
+				textColor: 'black'
 			},
 			businessHours: {
     		// days of week. an array of zero-based day of week integers (0=Sunday)
@@ -243,6 +266,7 @@ $('#appoint').on('click', function(e){
             let r = result;
             if (r["blocked"] == 0) {
                 alert("Success");
+                $('#calendar').fullCalendar('renderEvent', data);
             } else {
                 alert("Failed");
             }
@@ -252,6 +276,29 @@ $('#appoint').on('click', function(e){
         }
 
     });
+});
+
+$('#cancel').on('click', function(e){
+    let event_id = $('#event_id').val();
+    console.log(event_id);
+    let url = "{{ url_for('remove_data') }}";
+    let data = {"event_id": event_id};
+    if (Number.isInteger(parseInt(event_id))) {
+        $.ajax({
+            type: 'POST',
+            url: url,
+            data: JSON.stringify(data),
+            contentType: 'application/json; charset=UTF-8',
+            dataType:'json',
+            timeout: 10000,
+            success: function(result) {
+                alert("Appointment Cancel");
+                $('#calendar').fullCalendar('removeEvents', result["id"]);
+            },
+            error: function(xhr, type) {
+            }
+        });
+    };
 });
 
 </script>
