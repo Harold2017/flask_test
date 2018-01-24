@@ -6,6 +6,7 @@ import time
 from flask_sqlalchemy import SQLAlchemy
 import os
 from datetime import datetime, date, timedelta
+import re
 
 
 class Config:
@@ -48,7 +49,7 @@ def calendar():
     return render_template("calendar.html")
 
 
-@app.route('/data', methods=['GET', 'POST'])
+@app.route('/data', methods=['POST'])
 def return_data():
     '''start_date = request.args.get('start', '')
     end_date = request.args.get('end', '')
@@ -63,12 +64,19 @@ def return_data():
         # check out jsonfiy method or the built in json module
         # http://flask.pocoo.org/docs/0.10/api/#module-flask.json
         return "[" + input_data.read() + "]"'''
-    # r = request.args.get('start')
+    r = (request.stream.read()).decode("utf-8")
     # print(r)
-    now = datetime.today().date()
+    r = re.findall(r'\d*-\d*-\d*', r)
+    # print(r)
+    start = datetime.strptime(r[0], '%Y-%m-%d')
+    end = datetime.strptime(r[1], '%Y-%m-%d')
+    events = Event.query.filter(Event.start.between(start, end)).all()
+
+    '''now = datetime.today().date()
     # print(now)
     end = now + timedelta(days=14)
-    events = Event.query.filter(Event.start.between(now, end)).all()
+    events = Event.query.filter(Event.start.between(now, end)).all()'''
+
     response = []
     for event in events:
         response.append({"title": event.name + ' Event ID: ' + str(event.id), "start": event.start, "end": event.end, "id": event.id})

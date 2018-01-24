@@ -144,11 +144,12 @@
 			eventLimit: true, // allow "more" link when too many events
 			timezone: 'local', // utctime from server, then transfer to local time
 			events: {
-				url: 'data',
-				/*type: 'post',
-				data: {
-				    start: 100,
-				    end: moment().add(14, 'days')
+				//url: '/data',
+				url: "{{ url_for('return_data') }}",
+				type: 'post',
+				/*data: {
+				    start: Date(),
+				    end: moment().add(7, 'days')
 				},*/
 				error: function() {
 					$('#script-warning').show();
