@@ -39,6 +39,8 @@
 		padding: 0 10px;
 	}
 
+	.fc-day-grid-event .fc-content{ white-space: normal!important; }
+
 </style>
 <link href="//cdnjs.cloudflare.com/ajax/libs/fullcalendar/3.8.0/fullcalendar.min.css" rel='stylesheet' />
 <link href="//cdnjs.cloudflare.com/ajax/libs/fullcalendar/3.8.0/fullcalendar.print.css" rel='stylesheet' media='print' />
@@ -137,10 +139,12 @@
 				center: 'title',
 				right: 'month,agendaWeek,agendaDay,listDay'
 			},
+			defaultView: 'agendaWeek',
 			weekends: false,
 			listDayFormat: true,
 			// defaultDate: Date(),
 			editable: true,
+			displayEventEnd: true,
 			eventLimit: true, // allow "more" link when too many events
 			timezone: 'local', // utctime from server, then transfer to local time
 			events: {
@@ -228,13 +232,13 @@ $('#appoint').on('click', function(e){
     end_time = new Date(end_time);
     //console.log(end_time);
     var title = $('#name').val();
-    console.log(title);
-    event = {
+    //console.log(title);
+    /*event = {
     "title": title,
     "start": start_time,
     "end": end_time,
     };
-    /*events = $('#calendar').fullCalendar( 'clientEvents');
+    events = $('#calendar').fullCalendar( 'clientEvents');
     console.log(events);
     var cnt=0;
     for (let x of events) {
@@ -267,7 +271,12 @@ $('#appoint').on('click', function(e){
             let r = result;
             if (r["blocked"] == 0) {
                 alert("Success");
-                $('#calendar').fullCalendar('renderEvent', data);
+                $('#calendar').fullCalendar('renderEvent', {
+                    "title": title + ' Event ID: ' + r["id"],
+                    "start": start_time,
+                    "end": end_time,
+                    "id": r["id"]
+                });
             } else {
                 alert("Failed");
             }

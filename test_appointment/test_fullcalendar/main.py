@@ -97,17 +97,20 @@ def add_data():
     start_date = datetime.strptime(r['start'], '%Y-%m-%dT%H:%M:%S.%fZ')  # transfer to datetime type to compare
     end_date = datetime.strptime(r['end'], '%Y-%m-%dT%H:%M:%S.%fZ')
     title = r['title']
+    # print(start_date)
     events = Event.query.all()
     for event in events:
-        if start_date <= event.start <= event.end:  # TypeError: unorderable types: str() <= datetime.datetime()
+        if start_date.date() == event.start and start_date <= event.start <= event.end:  # TypeError: unorderable types: str() <= datetime.datetime()
             print("Invalid")
+            # print(event.start)
+            # print(event.end)
             # print(jsonify({"blocked": 1}))
             return jsonify({"blocked": 1})
     print(title, start_date, end_date)
     event_new = Event(name=title, start=start_date, end=end_date)
     db.session.add(event_new)
     db.session.commit()
-    return jsonify({"blocked": 0})
+    return jsonify({"blocked": 0, "id": event_new.id})
 
 
 @app.route('/remove', methods=['POST'])
