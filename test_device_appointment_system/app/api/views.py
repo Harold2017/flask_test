@@ -1,0 +1,75 @@
+from ..models import User, AppointmentEvents, Device
+from .. import db
+from . import api
+from flask import request, jsonify
+from datetime import datetime
+from sqlalchemy import and_
+
+
+@api.route('/v1.0/data/<device_id>', methods=['POST'])
+def return_data(device_id):
+    if device_id is None:
+        return "No valid device ID", 401
+    device_id = int(device_id)
+    r = (request.stream.read()).decode("utf-8")
+    r = re.findall(r'\d*-\d*-\d*', r)
+    start = datetime.strptime(r[0], '%Y-%m-%d')
+    end = datetime.strptime(r[1], '%Y-%m-%d')
+    events = AppointmentEvents.query.filter(
+        and_(AppointmentEvents.device_id == device_id,
+             AppointmentEvents.start.between(start, end))
+    ).all()
+    response = []
+    for event in events:
+        response.append({"title": event.name + ' Event ID: ' + str(event.id), "start": event.start,
+                         "end": event.end, "id": event.id})
+    return jsonify(response), 200
+
+
+@api.route('/v1.0/add/<token>/<device_id>', methods=['POST'])
+def add_data(token, device_id):
+    if token is None:
+        return "No valid token", 401
+    if device_id is None:
+        return "No valid device ID", 401
+    user = User.query.filter_by(avatar_hash=token).first()
+    privilege = list(map(int, user.privilege.split(',')))
+    device_id = int(device_id)
+    if device_id not in privilege:
+        return "No permission to access {0}".format(device_id)
+    r = request.get_json(force=True)
+    start_date = datetime.strptime(r['start'], '%Y-%m-%dT%H:%M:%S.%fZ')
+    end_date = datetime.strptime(r['end'], '%Y-%m-%dT%H:%M:%S.%fZ')
+    title = r['title']
+    events = AppointmentEvents.query.filter(
+        and_(AppointmentEvents.user_id == user.id, AppointmentEvents.device_id == device_id,
+             AppointmentEvents.start.between(start, end))
+    ).all()
+    for event in events:
+        if start_date.date() == event.start and start_date <= event.start <= event.end:
+            print("Invalid")
+            return jsonify({"blocked": 1})
+    print(title, start_date, end_date)
+    event_new = AppointmentEvents(name=title, user_id=user.id, device_id=device_id, start=start_date, end=end_date)
+    db.session.add(event_new)
+    db.session.commit()
+    return jsonify({"blocked": 0, "id": event_new.id}), 200
+
+
+@api.route('/v1.0/remove/<token>/<device_id>', methods=['POST'])
+def remove_data():
+    if token is None:
+        return "No valid token", 401
+    if device_id is None:
+        return "No valid device ID", 401
+    user = User.query.filter_by(avatar_hash=token).first()
+    privilege = list(map(int, user.privilege.split(',')))
+    device_id = int(device_id)
+    if device_id not in privilege:
+        return "No permission to access {0}".format(device_id)
+    r = request.get_json(force=True)
+    event_id = r['event_id']
+    event = AppointmentEvents.query.filter_by(id=event_id).first()
+    db.session.delete(event)
+    db.session.commit()
+    return jsonify({"id": event.id}), 200
