@@ -35,25 +35,27 @@ def add_data(token, device_id):
     user = User.query.filter_by(avatar_hash=token).first()
     # devices = user.devices.all()
     device_id = int(device_id)
-    # ud = db.session.query(user_device, User, Device).filter(User.id == user.id,
-    #                                                         Device.id == device_id).first()
+    # not available?
+    # ud = user_device.query.join(User, Device).filter(User.id == user.id,
+    #                                                  Device.id == device_id).first()
     # if device_id not in devices:
     # if ud is None:
-    if user in Device.query.filter_by(id=device_id).first().users:
-        return "No permission to access {0}".format(device_id)
+    device = Device.query.filter_by(id=device_id).first_or_404()
+    if user not in device.users:
+        return "No permission to access {0}".format(device_id), 401
     r = request.get_json(force=True)
     start_date = datetime.strptime(r['start'], '%Y-%m-%dT%H:%M:%S.%fZ')
     end_date = datetime.strptime(r['end'], '%Y-%m-%dT%H:%M:%S.%fZ')
     title = r['title']
     events = AppointmentEvents.query.filter(
         and_(AppointmentEvents.user_id == user.id, AppointmentEvents.device_id == device_id,
-             AppointmentEvents.start.between(start, end))
+             AppointmentEvents.start.between(start_date, end_date))
     ).all()
     for event in events:
         if start_date.date() == event.start and start_date <= event.start <= event.end:
-            print("Invalid")
+            # print("Invalid")
             return jsonify({"blocked": 1})
-    print(title, start_date, end_date)
+    # print(title, start_date, end_date)
     event_new = AppointmentEvents(name=title, user_id=user.id, device_id=device_id, start=start_date, end=end_date)
     db.session.add(event_new)
     db.session.commit()
@@ -69,12 +71,9 @@ def remove_data(token, device_id):
     user = User.query.filter_by(avatar_hash=token).first()
     # privilege = list(map(int, user.privilege.split(',')))
     device_id = int(device_id)
-    # ud = db.session.query(user_device, User, Device).filter(User.id == user.id,
-    #                                                         Device.id == device_id).first()
-    # if device_id not in privilege:
-    # if ud is None:
-    if user in Device.query.filter_by(id=device_id).first().users:
-        return "No permission to access {0}".format(device_id)
+    device = Device.query.filter_by(id=device_id).first_or_404()
+    if user not in device.users:
+        return "No permission to access {0}".format(device_id), 401
     r = request.get_json(force=True)
     event_id = r['event_id']
     event = AppointmentEvents.query.filter_by(id=event_id).first()
