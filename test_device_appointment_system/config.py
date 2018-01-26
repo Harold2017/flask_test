@@ -8,6 +8,7 @@ class Config:
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     RECAPTCHA_PUBLIC_KEY = '6LdIRz8UAAAAAJYJRrZuKDlRQTehaRE9uTcVsO9A'
     RECAPTCHA_PRIVATE_KEY = '6LdIRz8UAAAAAOjNSx8JsZtZtpdTMRyWelAvYSIY'
+    ADMIN = 'harold@harold.com'
 
     @staticmethod
     def init_app(app):

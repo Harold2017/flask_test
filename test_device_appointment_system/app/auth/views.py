@@ -1,8 +1,9 @@
 from flask import render_template, redirect, request, url_for, flash, jsonify
 from . import auth
 from .. import db
-from .. models import User, Device, AppointmentEvents
+from .. models import User, Device, AppointmentEvents, Permission
 from .forms import LoginForm, RegistrationForm
+from flask_login import login_user, logout_user, login_required, current_user
 
 
 @auth.route('/login', methods=['GET', 'POST'])
@@ -28,6 +29,14 @@ def loginMobile():
     token = user.avatar_hash
     if user is not None and user.verify_password(password):
         return jsonify({"token": token, "code": 200}), 200
+
+
+@auth.route('/logout')
+@login_required
+def logout():
+    logout_user()
+    flash('See you friend!')
+    return redirect(url_for('main.index'))
 
 
 @auth.route('/register', methods=['GET', 'POST'])
