@@ -4,11 +4,17 @@ from .. import db
 from ..models import User, Device, Permission
 from flask_login import login_required, current_user
 from ..decorators import admin_required, permission_required
+from .forms import EditUserForm
 
 
-@main.route('/')
+@main.route('/', methods=['GET', 'POST'])
 def index():
-    return render_template("index.html")
+    show_edit = False
+    if current_user.is_authenticated:
+        show_edit = bool(request.cookies.get('show_edit', ''))
+    if show_edit:
+        pass
+    return render_template("index.html", show_edit=show_edit)
 
 
 @main.route('/calendar', methods=['GET', 'POST'])
@@ -20,4 +26,6 @@ def calendar():
 @login_required
 @admin_required
 def edit():
-    pass
+    form = EditUserForm()
+    if form.validate_on_submit():
+        pass

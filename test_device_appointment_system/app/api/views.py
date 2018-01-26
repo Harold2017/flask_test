@@ -1,4 +1,4 @@
-from ..models import User, AppointmentEvents, Device
+from ..models import User, AppointmentEvents, Device, user_device
 from .. import db
 from . import api
 from flask import request, jsonify
@@ -33,9 +33,13 @@ def add_data(token, device_id):
     if device_id is None:
         return "No valid device ID", 401
     user = User.query.filter_by(avatar_hash=token).first()
-    privilege = list(map(int, user.privilege.split(',')))
+    # devices = user.devices.all()
     device_id = int(device_id)
-    if device_id not in privilege:
+    # ud = db.session.query(user_device, User, Device).filter(User.id == user.id,
+    #                                                         Device.id == device_id).first()
+    # if device_id not in devices:
+    # if ud is None:
+    if user in Device.query.filter_by(id=device_id).first().users:
         return "No permission to access {0}".format(device_id)
     r = request.get_json(force=True)
     start_date = datetime.strptime(r['start'], '%Y-%m-%dT%H:%M:%S.%fZ')
@@ -57,15 +61,19 @@ def add_data(token, device_id):
 
 
 @api.route('/v1.0/remove/<token>/<device_id>', methods=['POST'])
-def remove_data():
+def remove_data(token, device_id):
     if token is None:
         return "No valid token", 401
     if device_id is None:
         return "No valid device ID", 401
     user = User.query.filter_by(avatar_hash=token).first()
-    privilege = list(map(int, user.privilege.split(',')))
+    # privilege = list(map(int, user.privilege.split(',')))
     device_id = int(device_id)
-    if device_id not in privilege:
+    # ud = db.session.query(user_device, User, Device).filter(User.id == user.id,
+    #                                                         Device.id == device_id).first()
+    # if device_id not in privilege:
+    # if ud is None:
+    if user in Device.query.filter_by(id=device_id).first().users:
         return "No permission to access {0}".format(device_id)
     r = request.get_json(force=True)
     event_id = r['event_id']

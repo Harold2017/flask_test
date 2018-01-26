@@ -40,12 +40,23 @@ class Role(db.Model):
         return '<Role {0}>'.format(self.name)
 
 
+# user_id and device_id consist a primary key together
+user_device = db.Table('user_device',
+                       db.Column('user_id', db.Integer, db.ForeignKey('users.id'), primary_key=True),
+                       db.Column('device_id', db.Integer, db.ForeignKey('devices.id'), primary_key=True)
+                       )
+
+
 class Device(db.Model):
     __tablename__ = 'devices'
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(64), unique=True)
     status = db.Column(db.Boolean, default=True, index=True)
     details = db.Column(db.Text())
+    # devices and users have a middle-table user_device
+    # if get a user, then backref to devices to find all devices the user has
+    users = db.relationship('User', secondary=user_device, lazy='subquery',
+                            backref=db.backref('devices', lazy=True))
 
 
 class User(db.Model):
@@ -55,7 +66,6 @@ class User(db.Model):
     email = db.Column(db.String(64), unique=True, index=True)
     password_hash = db.Column(db.String(128))
     avatar_hash = db.Column(db.String(32))
-    privilege = db.Column(db.Text())
     role_id = db.Column(db.Integer, db.ForeignKey('roles.id'))
 
     def __init__(self, **kwargs):
@@ -94,7 +104,7 @@ class User(db.Model):
 
     def can(self, permissions):
         return self.role is not None and \
-            (self.role.permissions & permissions) == permissions
+               (self.role.permissions & permissions) == permissions
 
     def is_administrator(self):
         return self.can(Permission.ADMINISTER)
