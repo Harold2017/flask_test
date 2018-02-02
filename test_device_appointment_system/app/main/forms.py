@@ -13,7 +13,7 @@ class EditUserForm(FlaskForm):
                                                        'Names must have only letters, '
                                                        'or space')])
     email = StringField('Email', validators=[Required(), Length(1, 64), Email()])
-    role = SelectField('Role', coerce=int)
+    # role = SelectField('Role', coerce=int)
     device = TextAreaField('Device')
     submit = SubmitField('Submit')
 

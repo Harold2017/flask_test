@@ -22,15 +22,16 @@ def calendar():
 
 @main.route('/edit', methods=['GET', 'POST'])
 @login_required
-@admin_required
+# @admin_required
 def edit():
     form = EditUserForm()
-    user = None
+    '''user = None
     if form.validate_on_submit():
         email = form.email.data
         device = form.device.data
         print(device)
-        name = form.email.name
-        role = form.email.role
-        user = User.query.get_or_404(email=email)
-    return render_template('edit.html', form=form, user=user)
+        name = form.name.data
+        role = form.role.data
+        user = User.query.get_or_404(email=email)'''
+    # return render_template('edit.html', form=form, user=user, table=None)
+    return render_template('edit.html', form=form, table=None)
