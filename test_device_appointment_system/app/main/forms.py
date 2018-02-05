@@ -13,8 +13,15 @@ class EditUserForm(FlaskForm):
                                                        'Names must have only letters, '
                                                        'or space')])
     email = StringField('Email', validators=[Required(), Length(1, 64), Email()])
-    # role = SelectField('Role', coerce=int)
     device = TextAreaField('Device')
+    submit = SubmitField('Submit')
+
+
+class EditDeviceForm(FlaskForm):
+    name = StringField('Device name', validators=[Required(), Length(1, 64)])
+    users = TextAreaField('User names(separated by comma)')
+    status = SelectField('Device status', choices=[('True', 'Normal'), ('False', 'Broken')])
+    details = TextAreaField('Details')
     submit = SubmitField('Submit')
 
 
@@ -22,11 +29,16 @@ class ItemTable(Table):
     name = Col('Name')
     id = Col('id')
     classes = ['table', 'table-bordered']
-    devices = Col('devices')
+    status = Col('status')
+    details = Col('details')
+    # users = Col('users')
 
 
 class Item(object):
-    def __init__(self, name, id, devices):
+    def __init__(self, name, id, status, details):
         self.name = name
         self.id = id
-        self.devices = devices
+        self.status = status
+        self.details = details
+        # ud = db.session.query(user_device).filter_by(device_id=id).all()
+        # self.users = ud

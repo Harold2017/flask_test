@@ -59,7 +59,7 @@ class Device(db.Model):
                             backref=db.backref('devices', lazy=True))
 
 
-class User(db.Model):
+class User(UserMixin, db.Model):
     __tablename__ = 'users'
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(64))

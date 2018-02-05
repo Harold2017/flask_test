@@ -30,6 +30,11 @@
                 <li><a href="{{ url_for('main.edit') }}">Edit</a></li>
             </ul>
             {% endif %}
+            {% if current_user.is_authenticated %}
+            <ul class="nav navbar-nav">
+                <li><a href="{{ url_for('appointment.select_device') }}">Appointment</a></li>
+            </ul>
+            {% endif %}
             <ul class="nav navbar-nav navbar-right">
                 {% if current_user.is_authenticated %}
                 <li class="dropdown">
