@@ -1,7 +1,7 @@
 from flask import request, render_template, jsonify, flash
 from . import main
 from .. import db
-from ..models import User, Device, Permission, user_device
+from ..models import User, Device, Permission, user_device, AnonymousUser
 from flask_login import login_required, current_user
 from ..decorators import admin_required, permission_required
 from .forms import EditUserForm, Item, ItemTable, EditDeviceForm
@@ -28,7 +28,10 @@ def find_devices(user):
 @main.route('/', methods=['GET', 'POST'])
 def index():
     show_edit = False
-    if current_user.is_administrator:
+    # print(current_user.is_administrator())
+    # print(isinstance(current_user, AnonymousUser))
+    # print(isinstance(current_user, User))
+    if current_user.is_administrator():
         show_edit = True
     return render_template("index.html", show_edit=show_edit)
 
