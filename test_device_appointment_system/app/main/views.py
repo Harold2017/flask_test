@@ -104,12 +104,14 @@ def edit_user_device():
         email = form.email.data
         user = User.query.filter_by(email=email).first_or_404()
         name = form.name.data
+        devices = form.device.data.split(',')
         if name:
             user.name = name
             db.session.add(user)
-        device = Device.query.filter_by(id=int(form.device.data)).first_or_404()
-        device.users.append(user)
-        db.session.add(device)
+        for device in devices:
+            device = Device.query.filter_by(id=int(device)).first_or_404()
+            device.users.append(user)
+            db.session.add(device)
         db.session.commit()
         flash("User device updated!")
     return render_template('edit/edit_user_device.html', form=form)
