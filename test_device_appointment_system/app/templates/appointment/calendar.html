@@ -149,8 +149,8 @@
 			timezone: 'local', // utctime from server, then transfer to local time
 			events: {
 				//url: '/data',
-				//url: '{{ url_for('api.return_data'}}' + "/" + '{{ device_id }}',
-				url: '../../api/v1.0/data/' + '{{ device_id }}',
+				url: '{{ url_for('api.return_data', device_id=device_id)}}',
+				//url: '../../api/v1.0/data/' + '{{ device_id }}',
 				type: 'post',
 				/*data: {
 				    start: Date(),
@@ -252,7 +252,7 @@ $('#appoint').on('click', function(e){
     };
     //$('#calendar').fullCalendar('renderEvent', event);
     */
-    var url = "{{ url_for('api.add_data') }}";
+    var url = "{{ url_for('api.add_data', token=token, device_id=device_id) }}";
     var data = {
         "title": title,
         "start": start_time,
@@ -292,7 +292,7 @@ $('#appoint').on('click', function(e){
 $('#cancel').on('click', function(e){
     let event_id = $('#event_id').val();
     console.log(event_id);
-    let url = "{{ url_for('api.remove_data') }}";
+    let url = "{{ url_for('api.remove_data', token=token, device_id=device_id) }}";
     let data = {"event_id": event_id};
     if (Number.isInteger(parseInt(event_id))) {
         $.ajax({

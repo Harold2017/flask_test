@@ -4,6 +4,7 @@ from . import api
 from flask import request, jsonify
 from datetime import datetime
 from sqlalchemy import and_
+import re
 
 
 @api.route('/v1.0/data/<device_id>', methods=['POST'])

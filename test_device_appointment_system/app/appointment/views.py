@@ -1,7 +1,7 @@
 from flask import render_template, flash, redirect, url_for, request
 from . import appointment
 from .. import db
-from ..models import Device, user_device
+from ..models import Device, user_device, User
 from flask_login import login_required, current_user
 from .forms import DeviceSelectionForm
 
@@ -42,4 +42,7 @@ def select_device():
 def calendar():
     selected_device = request.args['selected_device']
     # print(selected_device)
-    return render_template("appointment/calendar.html", device_id=selected_device)
+    # print(url_for('api.return_data', device_id=selected_device))
+    user = User.query.filter_by(id=current_user.id).first()
+    token = user.avatar_hash
+    return render_template("appointment/calendar.html", device_id=selected_device, token=token)
