@@ -2,8 +2,9 @@ from flask import render_template, redirect, request, url_for, flash, jsonify
 from . import auth
 from .. import db
 from .. models import User, Device, AppointmentEvents, Permission
-from .forms import LoginForm, RegistrationForm
+from .forms import LoginForm, RegistrationForm, KeyGenerator
 from flask_login import login_user, logout_user, login_required, current_user
+from itsdangerous import TimedJSONWebSignatureSerializer as Serializer
 
 
 @auth.route('/login', methods=['GET', 'POST'])
@@ -52,3 +53,16 @@ def register():
         flash('Welcome on board!')
         return redirect(url_for('auth.login'))
     return render_template('auth/register.html', form=form)
+
+
+@auth.route('/unlock_key/<device_id>', methods=['GET'])
+@login_required
+def unlock_key():
+    keygen = KeyGenerator()
+    key = keygen.generator()
+    return jsonify({'key': key}), 200
+
+
+def generate_token(secret_key, expiration=3600):
+    s = Serializer(secret_key, expiration)
+    return s

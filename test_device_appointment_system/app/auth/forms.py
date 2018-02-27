@@ -3,6 +3,9 @@ from wtforms import StringField, PasswordField, BooleanField, SubmitField
 from wtforms.validators import Required, Length, Email, Regexp, EqualTo
 from wtforms import ValidationError
 from ..models import User
+import string
+import random
+import time
 
 
 class LoginForm(FlaskForm):
@@ -34,3 +37,13 @@ class RegistrationForm(FlaskForm):
     def validate_username(self, field):
         if User.query.filter_by(name=field.data).first():
             raise ValidationError('Username already in use.')
+
+
+class KeyGenerator:
+    def __init__(self, size=6, chars=string.ascii_uppercase + string.digits):
+        random.seed(time.time())
+        self.size = size
+        self.chars = chars
+
+    def generator(self):
+        return ''.join(random.choice(self.chars) for x in range(self.size))
