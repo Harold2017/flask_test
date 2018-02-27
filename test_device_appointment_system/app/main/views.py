@@ -5,6 +5,7 @@ from ..models import User, Device, Permission, user_device, AnonymousUser
 from flask_login import login_required, current_user
 from ..decorators import admin_required, permission_required
 from .forms import EditUserForm, Item, ItemTable, EditDeviceForm
+from ..QRcode.QRcode import qr_generator
 
 
 def find_users(device):
@@ -92,6 +93,7 @@ def edit_device():
         db.session.add(device)
         db.session.commit()
         flash("Device updated!")
+        qr_generator(device.id)
     return render_template('edit/edit_device.html', form=form)
 
 

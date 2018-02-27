@@ -33,4 +33,7 @@ def create_app(config_name):
     from .appointment import appointment as appointment_blueprint
     app.register_blueprint(appointment_blueprint, url_prefix='/appointment')
 
+    from .form import form as form_blueprint
+    app.register_blueprint(form_blueprint, url_prefix='/form')
+
     return app
