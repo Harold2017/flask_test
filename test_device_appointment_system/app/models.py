@@ -5,6 +5,9 @@ from itsdangerous import TimedJSONWebSignatureSerializer as Serializer
 from flask import current_app, request
 from . import db, login_manager
 from flask_login import UserMixin, AnonymousUserMixin
+import string
+import random
+import time
 
 
 class Permission:
@@ -53,10 +56,18 @@ class Device(db.Model):
     name = db.Column(db.String(64), unique=True)
     status = db.Column(db.Boolean, default=True, index=True)
     details = db.Column(db.Text())
+    # secret_key = db.Column(db.String(64))
     # devices and users have a middle-table user_device
     # if get a user, then backref to devices to find all devices the user has
     users = db.relationship('User', secondary=user_device, lazy='subquery',
                             backref=db.backref('devices', lazy=True))
+
+    '''def __init__(self):
+        keygen = KeyGenerator()
+        key = keygen.generator()
+        self.secret_key = key
+        db.session.add(self)
+        db.session.commit()'''
 
 
 class User(UserMixin, db.Model):
@@ -141,3 +152,30 @@ class AppointmentEvents(db.Model):
 
     def __repr__(self):
         return '<Event {0} on device {1} appointed by {2}>'.format(self.id, self.device_id, self.user_id)
+
+
+'''class Key(db.Model):
+    __tablename__ = 'keys'
+    id = db.Column(db.Integer, primary_key=True)
+    event_id = db.Column(db.Integer)
+    key = db.Column(db.String(64))
+
+    def __init__(self):
+        keygen = KeyGenerator()
+        key = keygen.generator()
+        self.secret_key = key
+        db.session.add(self)
+        db.session.commit()
+
+    def __repr__(self):
+        return '<Secret key {0}> for <Event {1}>'.format(self.id, self.event_id)
+
+
+class KeyGenerator:
+    def __init__(self, size=6, chars=string.ascii_uppercase + string.digits):
+        random.seed(time.time())
+        self.size = size
+        self.chars = chars
+
+    def generator(self):
+        return ''.join(random.choice(self.chars) for x in range(self.size))'''

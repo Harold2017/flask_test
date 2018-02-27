@@ -5,6 +5,12 @@ from .. models import User, Device, AppointmentEvents, Permission
 from .forms import LoginForm, RegistrationForm, KeyGenerator
 from flask_login import login_user, logout_user, login_required, current_user
 from itsdangerous import TimedJSONWebSignatureSerializer as Serializer
+from datetime import datetime
+from sqlalchemy import and_
+import os
+
+
+keys_folder = os.path.abspath("app") + "\\auth\\keys\\"
 
 
 @auth.route('/login', methods=['GET', 'POST'])
@@ -57,12 +63,63 @@ def register():
 
 @auth.route('/unlock_key/<device_id>', methods=['GET'])
 @login_required
-def unlock_key():
+def unlock_key(device_id):
+    user = current_user
+    device_id = int(device_id)
     keygen = KeyGenerator()
     key = keygen.generator()
+    current_time = datetime.now().strftime('%Y-%m-%dT%H:%M:%S.%fZ')
+    print(current_time)
+    event = AppointmentEvents.query.filter(
+        and_(AppointmentEvents.user_id == user.id, AppointmentEvents.device_id == device_id,
+             AppointmentEvents.start <= current_time, AppointmentEvents.end > current_time)
+    ).first()
+    print(event)
+    if event:
+        with open(keys_folder + str(device_id)+'.txt', 'w') as f:
+            f.write(key)
+        return jsonify({'key': key}), 200
+    else:
+        return 'Not found', 404
+
+
+@auth.route('/check_key/<device_id>', methods=['GET'])
+def check_key(device_id):
+    # check key from models?
+    # but how? need add a time field to key model?
+    if not os.path.isfile(keys_folder + device_id + '.txt'):
+        return 'Not found', 404
+    with open(keys_folder + device_id + '.txt', 'r') as f:
+        key = f.read()
     return jsonify({'key': key}), 200
 
 
-def generate_token(secret_key, expiration=3600):
+'''@auth.route('/unlock_key/<device_id>', methods=['GET'])
+@login_required
+# use token, public key on device
+# but it may be too hard for implementing this serialization on the device...
+# if send the key back for confirm, it is useless for security...
+def unlock_key(device_id):
+    user = current_user
+    device_id = int(device_id)
+    device = Device.query.filter_by(id=device_id).first_or_404()
+
+    current_time = datetime.now().strftime('%Y-%m-%dT%H:%M:%S.%fZ')
+    # print(current_time)
+    event = AppointmentEvents.query.filter(
+        and_(AppointmentEvents.user_id == user.id, AppointmentEvents.device_id == device_id,
+             AppointmentEvents.start <= current_time, AppointmentEvents.end > current_time)
+    ).first()
+    # print(event)
+
+    if event:
+        secret_key = device.secret_key
+        token = generate_token(secret_key)
+        print(token)
+        return jsonify({'OK': 'OK'}), 200
+        # return jsonify({'token': token}), 200'''
+
+
+'''def generate_token(secret_key, expiration=3600):
     s = Serializer(secret_key, expiration)
-    return s
+    return s'''
