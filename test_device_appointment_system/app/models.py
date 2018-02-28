@@ -179,3 +179,13 @@ class KeyGenerator:
 
     def generator(self):
         return ''.join(random.choice(self.chars) for x in range(self.size))'''
+
+
+class UserLog(db.Model):
+    __tablename__ = 'userlogs'
+    id = db.Column(db.Integer, primary_key=True)
+    user_name = db.Column(db.String(64))
+    device_id = db.Column(db.Integer)
+    device_status = db.Column(db.Boolean, default=True, index=True)
+    log_time = db.Column(db.DateTime(), default=datetime.utcnow)
+    details = db.Column(db.Text())
