@@ -45,19 +45,29 @@ def add_data(token, device_id):
     if user not in device.users:
         return "No permission to access {0}".format(device_id), 401
     r = request.get_json(force=True)
+
+    if r['title'] == '' or r['remark'] == '' or r['start'] == '' or r['end'] == '':
+        return jsonify({"blocked": 2})
+
     start_date = datetime.strptime(r['start'], '%Y-%m-%dT%H:%M:%S.%fZ')
     end_date = datetime.strptime(r['end'], '%Y-%m-%dT%H:%M:%S.%fZ')
     title = r['title']
+    remark = r['remark']
+    # print(start_date.time())
+    # print(type(title))
+    # print(title == '')
+
     events = AppointmentEvents.query.filter(
         and_(AppointmentEvents.user_id == user.id, AppointmentEvents.device_id == device_id,
              AppointmentEvents.start.between(start_date, end_date))
     ).all()
     for event in events:
-        if start_date.date() == event.start and start_date <= event.start <= event.end:
+        # print(event.start.date())
+        if start_date.time() == event.start.time() and start_date.time() <= event.start.time() <= event.end.time():
             # print("Invalid")
-            return jsonify({"blocked": 1})
+            return jsonify({"blocked": 3})
     # print(title, start_date, end_date)
-    event_new = AppointmentEvents(name=title, user_id=user.id, device_id=device_id, start=start_date, end=end_date)
+    event_new = AppointmentEvents(name=title, user_id=user.id, device_id=device_id, start=start_date, end=end_date, remark=remark)
     db.session.add(event_new)
     db.session.commit()
     return jsonify({"blocked": 0, "id": event_new.id}), 200
