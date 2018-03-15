@@ -1,0 +1,40 @@
+pip install gunicorn
+gunicorn manage:app
+
+# get gunicorn process tree
+pstree -ap|grep gunicorn
+# restart gunicorn
+kill -HUP xxxxx
+# quit gunicorn
+kill -9 xxxxx
+
+
+sudo apt-get install nginx
+
+vim /etc/nginx/sites-available/default
+
+server {
+  listen 80;
+  server_name www.namihk.com;
+  access_log logs/namihk.access.log;
+  error_log logs/namihk.error.log;
+  root var/www/html;
+  index index.html;
+  location / {
+    try_files $url @gunicorn_proxy;
+  }
+  
+  location @gunicorn_proxy {
+    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    proxy_set_header Host $http_host;
+    proxy_redirect off;
+    proxy_pass http://127.0.0.1:8000;
+    proxy_connect_timeout 500s;
+    proxy_read_timeout 500s;
+    proxy_send_timeout 500s;
+  }
+}
+
+service nginx start
+service nginx status
+
