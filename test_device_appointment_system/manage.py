@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 import os
 from app import create_app, db
-from app.models import User, Device, AppointmentEvents
+from app.models import User, Device, Role, AppointmentEvents
 from flask_script import Manager, Shell
 from flask_migrate import Migrate, MigrateCommand
 

@@ -94,6 +94,13 @@
                 <input type='text' class="form-control required" id='name'/>
         </div>
     </div>
+    <div class='col-md-5'>
+	    <div class='form-group'>
+		    <label>Remark (Chemical/Product)</label>
+		    <input type='text' class='form-control required' id='remark' required/>
+	    </div>
+    </div>
+
     <div class="container">
         <button class="btn btn-default btn-file" id="appoint">
             Appoint
@@ -113,7 +120,7 @@
         </div>
         <div class="container">
         <button class="btn btn-default btn-file" id="cancel">
-            Cancel
+            Cancel Appointment By Event ID
         </button>
     </div>
         </div>
@@ -234,10 +241,12 @@ $('#appoint').on('click', function(e){
     //console.log(end_time);
     var title = $('#name').val();
     //console.log(title);
+    var remark = $('#remark').val();
     /*event = {
     "title": title,
     "start": start_time,
     "end": end_time,
+    "remark": remark,
     };
     events = $('#calendar').fullCalendar( 'clientEvents');
     console.log(events);
@@ -256,7 +265,8 @@ $('#appoint').on('click', function(e){
     var data = {
         "title": title,
         "start": start_time,
-        "end": end_time
+        "end": end_time,
+	"remark": remark
     };
     console.log(data);
     $.ajax({
@@ -278,7 +288,11 @@ $('#appoint').on('click', function(e){
                     "end": end_time,
                     "id": r["id"]
                 });
-            } else {
+	    } else if (r['blocked'] == 2) {
+		    alert('Please fill in all required fields (start time/end time/name/remark)');
+	    } else if (r['blocked'] == 3) {
+	    	    alert('Please choose a valid date and time, former one raises conflict!');
+	    } else {
                 alert("Failed");
             }
             // console.log(result);

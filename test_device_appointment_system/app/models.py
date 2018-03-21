@@ -55,7 +55,7 @@ class Device(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(64), unique=True)
     status = db.Column(db.Boolean, default=True, index=True)
-    details = db.Column(db.Text())
+    details  = db.Column(db.Text())
     # secret_key = db.Column(db.String(64))
     # devices and users have a middle-table user_device
     # if get a user, then backref to devices to find all devices the user has
@@ -149,6 +149,7 @@ class AppointmentEvents(db.Model):
     device_id = db.Column(db.Integer, index=True)
     start = db.Column(db.DateTime(), default=datetime.utcnow)
     end = db.Column(db.DateTime())
+    remark = db.Column(db.Text())
 
     def __repr__(self):
         return '<Event {0} on device {1} appointed by {2}>'.format(self.id, self.device_id, self.user_id)
@@ -168,10 +169,10 @@ class AppointmentEvents(db.Model):
         db.session.commit()
 
     def __repr__(self):
-        return '<Secret key {0}> for <Event {1}>'.format(self.id, self.event_id)
+        return '<Secret key {0}> for <Event {1}>'.format(self.id, self.event_id)'''
 
 
-class KeyGenerator:
+'''class KeyGenerator:
     def __init__(self, size=6, chars=string.ascii_uppercase + string.digits):
         random.seed(time.time())
         self.size = size
