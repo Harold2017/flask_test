@@ -53,22 +53,15 @@ def add_data(token, device_id):
     end_date = datetime.strptime(r['end'], '%Y-%m-%dT%H:%M:%S.%fZ')
     title = r['title']
     remark = r['remark']
-<<<<<<< HEAD
-=======
     # print(start_date.time())
     # print(type(title))
     # print(title == '')
-
->>>>>>> 57f3527d023a93064a8197594553f667c2b0e879
     events = AppointmentEvents.query.filter(
         and_(AppointmentEvents.user_id == user.id, AppointmentEvents.device_id == device_id,
              AppointmentEvents.start.between(start_date, end_date))
     ).all()
     for event in events:
-<<<<<<< HEAD
-=======
         # print(event.start.date())
->>>>>>> 57f3527d023a93064a8197594553f667c2b0e879
         if start_date.time() == event.start.time() and start_date.time() <= event.start.time() <= event.end.time():
             # print("Invalid")
             return jsonify({"blocked": 3})

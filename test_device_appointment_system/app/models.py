@@ -61,7 +61,8 @@ class Device(db.Model):
     # if get a user, then backref to devices to find all devices the user has
     users = db.relationship('User', secondary=user_device, lazy='subquery',
                             backref=db.backref('devices', lazy=True))
-
+    # add in-use to determine whether the device is in use
+    device_inuse = db.Column(db.Boolean, default=False)
     '''def __init__(self):
         keygen = KeyGenerator()
         key = keygen.generator()
@@ -190,3 +191,17 @@ class UserLog(db.Model):
     device_status = db.Column(db.Boolean, default=True, index=True)
     log_time = db.Column(db.DateTime(), default=datetime.utcnow)
     details = db.Column(db.Text())
+
+
+class DeviceUsageLog(db.Model):
+    __tablename__ = 'deviceusagelogs'
+    id = db.Column(db.Integer, primary_key=True)
+    user_name = db.Column(db.String(64))
+    device_id = db.Column(db.Integer)
+    device_status = db.Column(db.Boolean, default=True, index=True)
+    start_time = db.Column(db.DateTime(), default=datetime.utcnow)
+    end_time = db.Column(db.DateTime(), onupdate=datetime.utcnow)
+    material = db.Column(db.String(64))
+    product = db.Column(db.String(64))
+    details = db.Column(db.Text())
+    remarks = db.Column(db.Text())

@@ -100,12 +100,6 @@
                 <input type='text' class="form-control required" id='remark' required/>
         </div>
     </div>
-    <div class='col-md-5'>
-	    <div class='form-group'>
-		    <label>Remark (Chemical/Product)</label>
-		    <input type='text' class='form-control required' id='remark' required/>
-	    </div>
-    </div>
 
     <div class="container">
         <button class="btn btn-default btn-file" id="appoint">
@@ -126,11 +120,7 @@
         </div>
         <div class="container">
         <button class="btn btn-default btn-file" id="cancel">
-<<<<<<< HEAD
             Cancel Appointment By Event ID
-=======
-            Cancel Appointment By ID
->>>>>>> 57f3527d023a93064a8197594553f667c2b0e879
         </button>
     </div>
         </div>
@@ -276,11 +266,7 @@ $('#appoint').on('click', function(e){
         "title": title,
         "start": start_time,
         "end": end_time,
-<<<<<<< HEAD
 	"remark": remark
-=======
-        "remark": remark
->>>>>>> 57f3527d023a93064a8197594553f667c2b0e879
     };
     console.log(data);
     $.ajax({
@@ -302,19 +288,11 @@ $('#appoint').on('click', function(e){
                     "end": end_time,
                     "id": r["id"]
                 });
-<<<<<<< HEAD
 	    } else if (r['blocked'] == 2) {
 		    alert('Please fill in all required fields (start time/end time/name/remark)');
 	    } else if (r['blocked'] == 3) {
 	    	    alert('Please choose a valid date and time, former one raises conflict!');
-	    } else {
-=======
-            } else if (r["blocked"] == 2) {
-                alert("Please fill in all required fields (start time/end time/name/remark)");
-            } else if (r["blocked"] == 3){
-                alert("Please choose a valid date and time, former one raises conflict!");
             } else {
->>>>>>> 57f3527d023a93064a8197594553f667c2b0e879
                 alert("Failed");
             }
             // console.log(result);
