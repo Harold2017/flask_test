@@ -48,17 +48,17 @@ def log(device_id):
             remarks = form.remarks.data
             product = form.product.data
             #  end_time = datetime.utcnow()
-            # try:
-            device_usage_log = DeviceUsageLog.query.filter_by(device_id=device_id).order_by(desc(DeviceUsageLog.id)).first()
+            try:
+                device_usage_log = DeviceUsageLog.query.filter_by(device_id=device_id).order_by(desc(DeviceUsageLog.id)).first()
                 # device_usage_log.end_time = end_time
-            device_usage_log.product = product
-            device_usage_log.remarks = remarks
-            device.in_use = False
-            db.session.commit()
-            return render_template('log/success.html')
-            # except:
-            #     db.session.rollback()
-            #     db.session.flush()
+                device_usage_log.product = product
+                device_usage_log.remarks = remarks
+                device.device_inuse = False
+                db.session.commit()
+                return render_template('log/success.html')
+            except:
+                db.session.rollback()
+                db.session.flush()
     return render_template('log/log.html', form=form)
 
 
