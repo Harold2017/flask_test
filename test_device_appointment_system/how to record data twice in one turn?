@@ -1,0 +1,5 @@
+record data before start using device and after using device:
+  1. login -> fill form
+     logout -> fill form -> confirm -> real logout
+  2. scan QR code -> fill form -> confirm -> fill usage form -> complete one turn
+     --this way may be better, test later
