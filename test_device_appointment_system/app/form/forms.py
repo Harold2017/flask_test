@@ -35,8 +35,10 @@ class ItemTable(Table):
     classes = ['table', 'table-bordered']
     device_status = Col('Device_status')
     start_time = Col('Start_time')
+    material = Col('Material')
     details = Col('Details')
     end_time = Col('End_time')
+    product = Col('Product')
     remarks = Col('Remarks')
 
 
