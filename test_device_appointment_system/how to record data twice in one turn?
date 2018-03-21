@@ -1,0 +1,14 @@
+record data before start using device and after using device:
+  1. login -> fill form
+     logout -> fill form -> confirm -> real logout
+  2. scan QR code -> fill form -> confirm -> fill usage form -> complete one turn
+     --this way may be better, test later
+  3. scan QR code 1 -> fill form -> confirm and send a notice/reminder
+     scan QR code 2 -> fill form -> confirm and update the device usage log -> complete one turn
+     
+     or
+     
+     scan the same QR code but redirect to two forms
+     --need a state record
+         --add a in-use status to device's status and update it when submit forms
+         --set a time threshold, if device's in-use status stays over this threshold -> send an alert email to admin
