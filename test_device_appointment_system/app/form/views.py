@@ -47,10 +47,10 @@ def log(device_id):
             status = s.get(status)
             remarks = form.remarks.data
             product = form.product.data
-            #  end_time = datetime.utcnow()
+            end_time = datetime.utcnow()
             try:
                 device_usage_log = DeviceUsageLog.query.filter_by(device_id=device_id).order_by(desc(DeviceUsageLog.id)).first()
-                # device_usage_log.end_time = end_time
+                device_usage_log.end_time = end_time
                 device_usage_log.product = product
                 device_usage_log.remarks = remarks
                 device.device_inuse = False
@@ -99,7 +99,7 @@ def device_log(device_id):
                  'material': d_log.material,
                  'details': d_log.details,
 
-                 'end_time': d_log.end_time,
+                 'end_time': d_log.end_time.replace(tzinfo=utc).astimezone(tzchina).strftime('%Y/%m/%d-%H:%M:%S'),
                  'product': d_log.product,
                  'remarks': d_log.remarks
                 }

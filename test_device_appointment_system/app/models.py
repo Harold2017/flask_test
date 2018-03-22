@@ -200,7 +200,7 @@ class DeviceUsageLog(db.Model):
     device_id = db.Column(db.Integer)
     device_status = db.Column(db.Boolean, default=True, index=True)
     start_time = db.Column(db.DateTime(), default=datetime.utcnow)
-    end_time = db.Column(db.DateTime(), onupdate=datetime.utcnow)
+    end_time = db.Column(db.DateTime()) # onupdate=datetime.utcnow)
     material = db.Column(db.String(64))
     product = db.Column(db.String(64))
     details = db.Column(db.Text())
