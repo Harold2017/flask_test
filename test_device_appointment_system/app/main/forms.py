@@ -21,6 +21,7 @@ class EditDeviceForm(FlaskForm):
     name = StringField('Device name', validators=[Required(), Length(1, 64)])
     users = TextAreaField('User names(separated by comma)')
     status = SelectField('Device status', choices=[('True', 'Normal'), ('False', 'Broken')])
+    device_type = SelectField('Device type', coerce=int, choices=[(0, 'Common Device'), (1, 'GloveBox')])
     details = TextAreaField('Details')
     submit = SubmitField('Submit')
 

@@ -1,10 +1,11 @@
 from . import form
-from .forms import StartForm, EndForm, ItemTable
+from .forms import StartForm, EndForm, ItemTable, GloveBoxStartForm, \
+        GloveBoxEndForm, GloveItemTable
 from flask import render_template
 from datetime import datetime
 import os
 import json
-from ..models import Device, DeviceUsageLog
+from ..models import Device, DeviceUsageLog, GloveBoxLog
 from .. import db
 from pytz import timezone
 from sqlalchemy import desc
@@ -108,5 +109,97 @@ def device_log(device_id):
         warn = 0
     else:
         warn = 'No logs for this device!'
+        table = 0
+    return render_template('log/device_log.html', warn=warn, table=table)
+
+
+@form.route('/glovebox/<device_id>', methods=['GET', 'POST'])
+def glovebox(device_id):
+    device_id = int(device_id)
+    device = Device.query.filter_by(id=device_id).first()
+    if device.device_inuse is False:
+        form = GloveBoxStartForm()
+        if form.validate_on_submit():
+            user = form.user.data
+            status = form.status.data
+            s = {0: None, 1: True, 2: False}
+            status = s.get(status)
+            h2o_before = form.h2o.data
+            o2_before = form.o2.data
+            ar_before = form.ar.data
+            pressure_before = form.pressure.data
+            material = form.material.data
+            details = form.details.data
+            try:
+                gloveboxlog = GloveBoxLog(user_name=user, device_id=device_id, device_status=status, h2o_before=h2o_before, o2_before=o2_before, ar_before=ar_before, pressure_before=pressure_before, material=material, details=details)
+                db.session.add(gloveboxlog)
+                device.device_inuse = True
+                db.session.commit()
+                return render_template('log/success.html')
+            except:
+                db.session.rollback()
+                db.session.flush()
+    else:
+        form = GloveBoxEndForm()
+        if form.validate_on_submit():
+            status = form.status.data
+            s = {0: None, 1: True, 2: False}
+            status = s.get(status)
+            h2o_after = form.h2o.data
+            o2_after = form.o2.data
+            ar_after = form.ar.data
+            pressure_after = form.pressure.data
+            product = form.product.data
+            remarks = form.remarks.data
+            try:
+                gloveboxlog = GloveBoxLog.query.filter_by(device_id=device_id).order_by(desc(GloveBoxLog.id)).first()
+                gloveboxlog.h2o_after = h2o_after
+                gloveboxlog.o2_after = o2_after
+                gloveboxlog.ar_after = ar_after
+                gloveboxlog.pressure_after = pressure_after
+                gloveboxlog.product = product
+                gloveboxlog.remarks = remarks
+                device.device_inuse = False
+                db.session.commit()
+                return render_template('log/success.html')
+            except:
+                db.session.rollback()
+                db.session.flush()
+    return render_template('log/log.html', form=form)
+
+
+@form.route('/glovebox/glovebox_log/<device_id>')
+def glovebox_log(device_id):
+    device_id = int(device_id)
+    if GloveBoxLog.query.filter_by(device_id=device_id).first():
+        g_logs = GloveBoxLog.query.filter_by(device_id=device_id).all()
+        device_name = Device.query.filter_by(id=device_id).first().name
+        ls = []
+        for g_log in g_logs:
+            g = {'user_name': g_log.user_name,
+                 'device_id': g_log.device_id,
+                 'device_name': device_name,
+                 'device_status': {0: None, 1: 'Normal', 2: 'Broken'}.get(g_log.device_status),
+                 'start_time': g_log.start_time.replace(tzinfo=utc).astimezone(tzchina).strftime('%Y/%m/%d-%H:%M:%S'),
+                 'h2o_before': g_log.h2o_before,
+                 'o2_before': g_log.o2_before,
+                 'ar_before': g_log.ar_before,
+                 'pressure_before': g_log.pressure_before,
+                 'material': g_log.material,
+                 'details': g_log.details,
+
+                 'end_time': g_log.end_time.replace(tzinfo=utc).astimezone(tzchina).strftime('%Y/%m/%d-%H:%M:%S'),
+                 'h2o_after': g_log.h2o_after,
+                 'o2_after': g_log.o2_after,
+                 'ar_after': g_log.ar_after,
+                 'pressure_after': g_log.pressure_after,
+                 'product': g_log.product,
+                 'remarks': g_log.remarks
+            }
+            ls.append(g)
+        table = GloveItemTable(ls)
+        warn = 0
+    else:
+        warn = 'No logs for this glovebox!'
         table = 0
     return render_template('log/device_log.html', warn=warn, table=table)

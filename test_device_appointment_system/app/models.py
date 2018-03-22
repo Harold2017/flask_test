@@ -205,3 +205,26 @@ class DeviceUsageLog(db.Model):
     product = db.Column(db.String(64))
     details = db.Column(db.Text())
     remarks = db.Column(db.Text())
+
+
+class GloveBoxLog(db.Model):
+    __tablename__ = 'gloveboxlogs'
+    id = db.Column(db.Integer, primary_key=True)
+    user_name = db.Column(db.String(64))
+    device_id = db.Column(db.Integer)
+    device_status = db.Column(db.Boolean, default=True, index=True)
+    h2o_before = db.Column(db.Float)
+    o2_before = db.Column(db.Float)
+    ar_before = db.Column(db.Float)
+    pressure_before = db.Column(db.Float)
+    start_time = db.Column(db.DateTime(), default=datetime.utcnow)
+    material = db.Column(db.String(128))
+    details = db.Column(db.Text())
+
+    h2o_after = db.Column(db.Float)
+    o2_after = db.Column(db.Float)
+    ar_after = db.Column(db.Float)
+    pressure_after = db.Column(db.Float)
+    end_time = db.Column(db.DateTime(), onupdate=datetime.utcnow)
+    product = db.Column(db.String(128))
+    remarks = db.Column(db.Text())

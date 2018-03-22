@@ -78,6 +78,8 @@ def edit_device():
         status = form.status.data
         details = form.details.data
         users = form.users.data
+        device_type = form.device_type.data
+        print(device_type)
         device = Device(name=name)
         if status:
             device.status = True if status == 'True' else False
@@ -95,7 +97,14 @@ def edit_device():
         db.session.add(device)
         db.session.commit()
         flash("Device updated!")
-        qr_generator(device.id)
+        if device_type == 0:
+            baseUrl = 'http://www.namihk.com/form/'
+            qr_generator(baseUrl, device.id)
+        elif device_type == 1:
+            baseUrl = 'http://www.namihk.com/form/glovebox/'
+            qr_generator(baseUrl, device.id)
+        else:
+            pass
         # qr_generator will take more than 2s to generate the img
         # if upload device too fast, it may generate wrong imgs
         # need find a way to solve this problem
