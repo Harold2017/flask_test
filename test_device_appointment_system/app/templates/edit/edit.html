@@ -16,6 +16,7 @@
             <th>Name</th>
             <th>Status</th>
             <th>Details</th>
+	    <th>QR code</th>
             <th>Users</th>
         <tr>
     </thead>
@@ -26,6 +27,8 @@
             <td>{{ device.name }}</td>
             <td>{{ device.status }}</td>
             <td>{{ device.details }}</td>
+	    <!--td><img src={{ device.img_path }}></img></td-->
+	    <td><a href={{ device.img_path }} target="_blank">Link</td>
             <td>{{ device.users }}</td>
         </tr>
         {% endfor %}

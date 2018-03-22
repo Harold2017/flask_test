@@ -51,10 +51,12 @@ def edit():
         table = None'''
     device_list = []
     for device in devices:
+        img_path = "../static/QRcode/Device" + str(device.id) + '.png'
         device_list.append({"id": device.id,
                             "name": device.name,
                             "status": device.status,
                             "details": device.details,
+                            "img_path": img_path,
                             "users": find_users(device)})
 
     user_list = []
@@ -94,6 +96,9 @@ def edit_device():
         db.session.commit()
         flash("Device updated!")
         qr_generator(device.id)
+        # qr_generator will take more than 2s to generate the img
+        # if upload device too fast, it may generate wrong imgs
+        # need find a way to solve this problem
     return render_template('edit/edit_device.html', form=form)
 
 
