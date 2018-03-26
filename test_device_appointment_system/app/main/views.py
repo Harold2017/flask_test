@@ -1,7 +1,7 @@
 from flask import request, render_template, jsonify, flash
 from . import main
 from .. import db
-from ..models import User, Device, Permission, user_device, AnonymousUser
+from ..models import User, Device, Permission, user_device, AnonymousUser, DeviceUsageLog, GloveBoxLog
 from flask_login import login_required, current_user
 from ..decorators import admin_required, permission_required
 from .forms import EditUserForm, Item, ItemTable, EditDeviceForm
@@ -52,12 +52,20 @@ def edit():
     device_list = []
     for device in devices:
         img_path = "../static/QRcode/Device" + str(device.id) + '.png'
+        if DeviceUsageLog.query.filter_by(device_id=device.id).first():
+            logs = "http://namihk.com/form/device_log/" + str(device.id)
+        elif GloveBoxLog.query.filter_by(device_id=device.id).first():
+            logs = "http://namihk.com/form/glovebox/glovebox_log/" + str(device.id)
+        else:
+            logs = None
         device_list.append({"id": device.id,
                             "name": device.name,
-                            "status": device.status,
+                            "status": 'Normal' if device.status else 'Broken',
                             "details": device.details,
                             "img_path": img_path,
-                            "users": find_users(device)})
+                            "users": find_users(device),
+                            "logs": logs
+                           })
 
     user_list = []
     for user in users:

@@ -18,6 +18,7 @@
             <th>Details</th>
 	    <th>QR code</th>
             <th>Users</th>
+	    <th>Logs</th>
         <tr>
     </thead>
     <tbody>
@@ -30,6 +31,7 @@
 	    <!--td><img src={{ device.img_path }}></img></td-->
 	    <td><a href={{ device.img_path }} target="_blank">Link</td>
             <td>{{ device.users }}</td>
+	    <td><a href={{ device.logs }} target="_blank">Link</td>
         </tr>
         {% endfor %}
     </tbody>

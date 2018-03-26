@@ -100,7 +100,7 @@ def device_log(device_id):
                  'material': d_log.material,
                  'details': d_log.details,
 
-                 'end_time': d_log.end_time.replace(tzinfo=utc).astimezone(tzchina).strftime('%Y/%m/%d-%H:%M:%S'),
+                 'end_time': d_log.end_time.replace(tzinfo=utc).astimezone(tzchina).strftime('%Y/%m/%d-%H:%M:%S') if d_log.end_time is not None else 'Inuse',
                  'product': d_log.product,
                  'remarks': d_log.remarks
                 }
@@ -189,7 +189,7 @@ def glovebox_log(device_id):
                  'material': g_log.material,
                  'details': g_log.details,
 
-                 'end_time': g_log.end_time.replace(tzinfo=utc).astimezone(tzchina).strftime('%Y/%m/%d-%H:%M:%S'),
+                 'end_time': g_log.end_time.replace(tzinfo=utc).astimezone(tzchina).strftime('%Y/%m/%d-%H:%M:%S') if g_log.end_time is not None else 'Inuse',
                  'h2o_after': g_log.h2o_after,
                  'o2_after': g_log.o2_after,
                  'ar_after': g_log.ar_after,
