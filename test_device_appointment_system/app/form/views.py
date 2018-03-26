@@ -40,6 +40,7 @@ def log(device_id):
             except:
                 db.session.rollback()
                 db.session.flush()
+        return render_template('log/log.html', form=form)
     else:
         form = EndForm()
         if form.validate_on_submit():
@@ -60,8 +61,7 @@ def log(device_id):
             except:
                 db.session.rollback()
                 db.session.flush()
-    return render_template('log/log.html', form=form)
-
+        return render_template('log/log_logout.html', form=form)
 
 '''def log(device_id):
     form = LogForm()
@@ -139,6 +139,7 @@ def glovebox(device_id):
             except:
                 db.session.rollback()
                 db.session.flush()
+        return render_template('log/log.html', form=form)
     else:
         form = GloveBoxEndForm()
         if form.validate_on_submit():
@@ -165,7 +166,7 @@ def glovebox(device_id):
             except:
                 db.session.rollback()
                 db.session.flush()
-    return render_template('log/log.html', form=form)
+        return render_template('log/log_logout.html', form=form)
 
 
 @form.route('/glovebox/glovebox_log/<device_id>')
