@@ -3,7 +3,10 @@ from flask_bootstrap import Bootstrap
 from flask_sqlalchemy import SQLAlchemy
 from config import config
 from flask_login import LoginManager
+from flask_apscheduler import APScheduler
 
+
+scheduler = APScheduler()
 bootstrap = Bootstrap()
 db = SQLAlchemy()
 
@@ -18,8 +21,11 @@ def create_app(config_name):
     config[config_name].init_app(app)
 
     bootstrap.init_app(app)
+    db.app = app
     db.init_app(app)
     login_manager.init_app(app)
+    scheduler.init_app(app)
+    scheduler.start()
 
     from .api import api as api_blueprint
     app.register_blueprint(api_blueprint, url_prefix='/api')
@@ -36,4 +42,7 @@ def create_app(config_name):
     from .form import form as form_blueprint
     app.register_blueprint(form_blueprint, url_prefix='/form')
 
-    return app
+    try:
+        return app
+    except:
+        scheduler.shutdown()
