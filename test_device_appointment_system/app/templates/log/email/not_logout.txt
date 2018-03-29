@@ -1,0 +1,6 @@
+Dear Administrator,
+
+Please notice that {{ user_name }} did NOT logout {{ device_name }}.
+
+Sincerely,
+Harold

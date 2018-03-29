@@ -8,11 +8,14 @@ from datetime import datetime
 from math import floor
 from sqlalchemy import desc
 from apscheduler import events
+from app.email import send_email
 
 
 app = create_app(os.getenv('FLASK_CONFIG') or 'default')
 manager = Manager(app)
 migrate = Migrate(app, db)
+
+EMAIL_RECEIVER = 'peixindu@nami.org.hk'
 
 
 def check_log():
@@ -40,6 +43,13 @@ def check_log():
                     except:
                         db.session.rollback()
                         db.session.flush()
+                    try:
+                        send_email(EMAIL_RECEIVER, 'Not Logout',
+                                  'log/email/not_logout',
+                                   user_name=l.user_name, 
+                                   device_name=device.name)
+                    except Exception as e:
+                        print(str(e))
 
 
 def job_listener(event):
@@ -72,6 +82,6 @@ def test():
 
 
 if __name__ == '__main__':
-    scheduler.add_job(func=check_log, id='check_log', trigger='interval', hours=1)
+    scheduler.add_job(func=check_log, id='check_log', trigger='interval', minutes=1)
     scheduler.add_listener(job_listener, events.EVENT_JOB_EXECUTED | events.EVENT_JOB_MISSED | events.EVENT_JOB_ERROR)
     manager.run()
