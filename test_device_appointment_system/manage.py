@@ -1,12 +1,13 @@
 #!/usr/bin/env python
 import os
 from app import create_app, db, scheduler
-from app.models import User, Device, Role, AppointmentEvents, DeviceUsageLog, GloveBoxLog
+from app.models import User, Device, Role, AppointmentEvents, DeviceUsageLog, GloveBoxLog, JobLog
 from flask_script import Manager, Shell
 from flask_migrate import Migrate, MigrateCommand
 from datetime import datetime
 from math import floor
 from sqlalchemy import desc
+from apscheduler import events
 
 
 app = create_app(os.getenv('FLASK_CONFIG') or 'default')
@@ -41,6 +42,19 @@ def check_log():
                         db.session.flush()
 
 
+def job_listener(event):
+    if event.exception:
+        joblog = JobLog(job_name=event.job_id, excute_status=False, result=event.exception)
+    else:
+        joblog = JobLog(job_name=event.job_id)
+    try:
+        db.session.add(joblog)
+        db.session.commit()
+    except:
+        db.session.rollback()
+        db.session.flush()
+
+
 def make_shell_context():
     return dict(app=app, db=db, User=User, Device=Device, AppointmentEvents=AppointmentEvents)
 
@@ -58,5 +72,6 @@ def test():
 
 
 if __name__ == '__main__':
-    scheduler.add_job(func=check_log, id='check_log', trigger='interval', hours=1)
+    scheduler.add_job(func=check_log, id='check_log', trigger='interval', minutes=1)
+    scheduler.add_listener(job_listener, events.EVENT_JOB_EXECUTED | events.EVENT_JOB_MISSED | events.EVENT_JOB_ERROR)
     manager.run()

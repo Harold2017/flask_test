@@ -228,3 +228,13 @@ class GloveBoxLog(db.Model):
     end_time = db.Column(db.DateTime(), onupdate=datetime.utcnow)
     product = db.Column(db.String(128))
     remarks = db.Column(db.Text())
+
+
+class JobLog(db.Model):
+    __tablename__ = 'joblogs'
+    id = db.Column(db.Integer, primary_key=True)
+    job_name = db.Column(db.String(64))
+    excute_time = db.Column(db.DateTime(), default=datetime.utcnow)
+    excute_status = db.Column(db.Boolean, default=True, index=True)
+    result = db.Column(db.Text(), default=None)
+
