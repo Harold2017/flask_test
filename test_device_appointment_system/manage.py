@@ -72,6 +72,6 @@ def test():
 
 
 if __name__ == '__main__':
-    scheduler.add_job(func=check_log, id='check_log', trigger='interval', minutes=1)
+    scheduler.add_job(func=check_log, id='check_log', trigger='interval', hours=1)
     scheduler.add_listener(job_listener, events.EVENT_JOB_EXECUTED | events.EVENT_JOB_MISSED | events.EVENT_JOB_ERROR)
     manager.run()
