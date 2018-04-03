@@ -15,7 +15,7 @@ app = create_app(os.getenv('FLASK_CONFIG') or 'default')
 manager = Manager(app)
 migrate = Migrate(app, db)
 
-EMAIL_RECEIVER = 'peixindu@nami.org.hk'
+EMAIL_RECEIVER = 'jimmywlhon@nami.org.hk'
 
 
 def check_log():
