@@ -62,8 +62,12 @@ def check_device_state():
                             'log/email/status_change',
                             device_name=device.name,
                             device_status=device.status)
+                    device.state_transfer = False
+                    db.session.commit()
                 except Exception as e:
                     print(str(e))
+                    db.session.rollback()
+                    db.session.flush()
 
 
 def job_listener(event):
