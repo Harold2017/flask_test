@@ -1,0 +1,33 @@
+1. device conditions: 
+  a. Normal
+  b. Broken
+  c. Fixing
+  d. Terminated
+  
+2. Two ways to store the conditions:
+  a. use ENUM
+      class DBEnum(enum.Enum):
+        @classmethod
+        def get_enum_labels(cls):
+          return [i.value for i in cls]
+
+
+      class ConditionEnum(DBEnum):
+        Normal = "Normal"  
+        Broken = "Broken"             
+        Fixing = "Fixing"
+        Terminated = "Terminated"
+
+      condition = db.Column(db.Enum(*ConditionEnum.get_enum_labels()), default=ConditionEnum.Normal.value)
+   
+  b. use char
+      condition = db.Column(db.CHAR, default='N')
+      conditions = {'N': 'Normal', 'B': 'Broken', 'F': 'Fixing', 'T': 'Terminated'}
+      conditions dict can be added into Config
+      
+3. Conditions transfer diagram:
+  N->B/F/T
+  B->N/F/T
+  F->N/T
+  
+  scan the same QR code but render different forms according to device's condition and add status transfer button
