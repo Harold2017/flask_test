@@ -1,6 +1,6 @@
 from . import form
 from .forms import StartForm, EndForm, ItemTable, GloveBoxStartForm, \
-        GloveBoxEndForm, GloveItemTable
+        GloveBoxEndForm, GloveItemTable, StateTransferForm
 from flask import render_template
 from datetime import datetime
 import os
@@ -21,47 +21,71 @@ log_folder = os.path.abspath('app') + '\\form\\log\\'
 def log(device_id):
     device_id = int(device_id)
     device = Device.query.filter_by(id=device_id).first()
-    if device.device_inuse is False:
-        form = StartForm()
-        if form.validate_on_submit():
-            user = form.user.data
-            status = form.status.data
-            s = {0: None, 1: True, 2: False}
-            status = s.get(status)
-            details = form.details.data
-            start_time = datetime.utcnow()
-            material = form.material.data
-            try:
-                device_usage_log = DeviceUsageLog(user_name=user, device_id=device_id, device_status=status, material=material, details=details)
-                db.session.add(device_usage_log)
-                device.device_inuse = True
-                db.session.commit()
-                return render_template('log/success.html')
-            except:
-                db.session.rollback()
-                db.session.flush()
-        return render_template('log/log.html', form=form)
+    if device.status == 'Normal':
+        if device.device_inuse is False:
+            form = StartForm()
+            if form.validate_on_submit():
+                user = form.user.data
+                status = form.status.data
+                s = {0: None, 1: 'Normal', 2: 'Broken', 3: 'Fixing', 4: 'Terminated'}
+                status = s.get(status)
+                details = form.details.data
+                start_time = datetime.utcnow()
+                material = form.material.data
+                try:
+                    device_usage_log = DeviceUsageLog(user_name=user, device_id=device_id, device_status=status, material=material, details=details)
+                    db.session.add(device_usage_log)
+                    device.status = status
+                    device.device_inuse = True
+                    db.session.commit()
+                    return render_template('log/success.html')
+                except:
+                    db.session.rollback()
+                    db.session.flush()
+            return render_template('log/log.html', form=form)
+        else:
+            form = EndForm()
+            if form.validate_on_submit():
+                status = form.status.data
+                s = {0: None, 1: 'Normal', 2: 'Broken', 3: 'Fixing', 4: 'Terminated'}
+                status = s.get(status)
+                remarks = form.remarks.data
+                product = form.product.data
+                end_time = datetime.utcnow()
+                try:
+                    device_usage_log = DeviceUsageLog.query.filter_by(device_id=device_id).order_by(desc(DeviceUsageLog.id)).first()
+                    device_usage_log.end_time = end_time
+                    device_usage_log.product = product
+                    device_usage_log.remarks = remarks
+                    device.status = status
+                    device.device_inuse = False
+                    db.session.commit()
+                    return render_template('log/success.html')
+                except:
+                    db.session.rollback()
+                    db.session.flush()
+            return render_template('log/log_logout.html', form=form)
+    elif device.status == 'Terminated':
+        return render_template('log/terminated.html')
     else:
-        form = EndForm()
+        form = StateTransferForm()
+        status = device.status
         if form.validate_on_submit():
-            status = form.status.data
-            s = {0: None, 1: True, 2: False}
-            status = s.get(status)
-            remarks = form.remarks.data
-            product = form.product.data
-            end_time = datetime.utcnow()
-            try:
-                device_usage_log = DeviceUsageLog.query.filter_by(device_id=device_id).order_by(desc(DeviceUsageLog.id)).first()
-                device_usage_log.end_time = end_time
-                device_usage_log.product = product
-                device_usage_log.remarks = remarks
-                device.device_inuse = False
-                db.session.commit()
-                return render_template('log/success.html')
-            except:
-                db.session.rollback()
-                db.session.flush()
-        return render_template('log/log_logout.html', form=form)
+            status_s = form.status.data
+            s = {0: None, 1: 'Normal', 2: 'Broken', 3: 'Fixing', 4: 'Terminated'}
+            status_s = s.get(status_s)
+            if status_s == status:
+                return
+            else:
+                try:
+                    device.status = status_s
+                    device.state_transfer = True
+                    db.session.commit()
+                    return render_template('log/success.html')
+                except:
+                    db.session.rollback()
+                    db.session.flush()
+        return render_template('log/state_transfer.html', status=status, form=form)
 
 '''def log(device_id):
     form = LogForm()
@@ -95,7 +119,7 @@ def device_log(device_id):
             d = {'user_name': d_log.user_name,
                  'device_id': d_log.device_id,
                  'device_name': device_name,
-                 'device_status': {0: None, 1: 'Normal', 2: 'Broken'}.get(d_log.device_status),
+                 'device_status': d_log.device_status,
                  'start_time': d_log.start_time.replace(tzinfo=utc).astimezone(tzchina).strftime('%Y/%m/%d-%H:%M:%S'),
                  'material': d_log.material,
                  'details': d_log.details,
@@ -117,56 +141,80 @@ def device_log(device_id):
 def glovebox(device_id):
     device_id = int(device_id)
     device = Device.query.filter_by(id=device_id).first()
-    if device.device_inuse is False:
-        form = GloveBoxStartForm()
-        if form.validate_on_submit():
-            user = form.user.data
-            status = form.status.data
-            s = {0: None, 1: True, 2: False}
-            status = s.get(status)
-            h2o_before = form.h2o.data
-            o2_before = form.o2.data
-            ar_before = form.ar.data
-            pressure_before = form.pressure.data
-            material = form.material.data
-            details = form.details.data
-            try:
-                gloveboxlog = GloveBoxLog(user_name=user, device_id=device_id, device_status=status, h2o_before=h2o_before, o2_before=o2_before, ar_before=ar_before, pressure_before=pressure_before, material=material, details=details)
-                db.session.add(gloveboxlog)
-                device.device_inuse = True
-                db.session.commit()
-                return render_template('log/success.html')
-            except:
-                db.session.rollback()
-                db.session.flush()
-        return render_template('log/log.html', form=form)
+    if device.status == 'Normal':
+        if device.device_inuse is False:
+            form = GloveBoxStartForm()
+            if form.validate_on_submit():
+                user = form.user.data
+                status = form.status.data
+                s = {0: None, 1: 'Normal', 2: 'Broken', 3: 'Fixing', 4: 'Terminated'}
+                status = s.get(status)
+                h2o_before = form.h2o.data
+                o2_before = form.o2.data
+                ar_before = form.ar.data
+                pressure_before = form.pressure.data
+                material = form.material.data
+                details = form.details.data
+                try:
+                    gloveboxlog = GloveBoxLog(user_name=user, device_id=device_id, device_status=status, h2o_before=h2o_before, o2_before=o2_before, ar_before=ar_before, pressure_before=pressure_before, material=material, details=details)
+                    db.session.add(gloveboxlog)
+                    device.status = status
+                    device.device_inuse = True
+                    db.session.commit()
+                    return render_template('log/success.html')
+                except:
+                    db.session.rollback()
+                    db.session.flush()
+            return render_template('log/log.html', form=form)
+        else:
+            form = GloveBoxEndForm()
+            if form.validate_on_submit():
+                status = form.status.data
+                s = {0: None, 1: 'Normal', 2: 'Broken', 3: 'Fixing', 4: 'Terminated'}
+                status = s.get(status)
+                h2o_after = form.h2o.data
+                o2_after = form.o2.data
+                ar_after = form.ar.data
+                pressure_after = form.pressure.data
+                product = form.product.data
+                remarks = form.remarks.data
+                try:
+                    gloveboxlog = GloveBoxLog.query.filter_by(device_id=device_id).order_by(desc(GloveBoxLog.id)).first()
+                    gloveboxlog.h2o_after = h2o_after
+                    gloveboxlog.o2_after = o2_after
+                    gloveboxlog.ar_after = ar_after
+                    gloveboxlog.pressure_after = pressure_after
+                    gloveboxlog.product = product
+                    gloveboxlog.remarks = remarks
+                    device.status = status
+                    device.device_inuse = False
+                    db.session.commit()
+                    return render_template('log/success.html')
+                except:
+                    db.session.rollback()
+                    db.session.flush()
+            return render_template('log/log_logout.html', form=form)
+    elif device.status == 'Terminated':
+        return render_template('log/terminated.html')
     else:
-        form = GloveBoxEndForm()
+        form = StateTransferForm()
+        status = device.status
         if form.validate_on_submit():
-            status = form.status.data
-            s = {0: None, 1: True, 2: False}
-            status = s.get(status)
-            h2o_after = form.h2o.data
-            o2_after = form.o2.data
-            ar_after = form.ar.data
-            pressure_after = form.pressure.data
-            product = form.product.data
-            remarks = form.remarks.data
-            try:
-                gloveboxlog = GloveBoxLog.query.filter_by(device_id=device_id).order_by(desc(GloveBoxLog.id)).first()
-                gloveboxlog.h2o_after = h2o_after
-                gloveboxlog.o2_after = o2_after
-                gloveboxlog.ar_after = ar_after
-                gloveboxlog.pressure_after = pressure_after
-                gloveboxlog.product = product
-                gloveboxlog.remarks = remarks
-                device.device_inuse = False
-                db.session.commit()
-                return render_template('log/success.html')
-            except:
-                db.session.rollback()
-                db.session.flush()
-        return render_template('log/log_logout.html', form=form)
+            status_s = form.status.data
+            s = {0: None, 1: 'Normal', 2: 'Broken', 3: 'Fixing', 4: 'Terminated'}
+            status_s = s.get(status_s)
+            if status_s == status:
+                return
+            else:
+                try:
+                    device.status = status_s
+                    device.state_transfer = True
+                    db.session.commit()
+                    return render_template('log/success.html')
+                except:
+                    db.session.rollback()
+                    db.session.flush()
+        return render_template('log/state_transfer.html', status=status, form=form)
 
 
 @form.route('/glovebox/glovebox_log/<device_id>')
@@ -180,7 +228,7 @@ def glovebox_log(device_id):
             g = {'user_name': g_log.user_name,
                  'device_id': g_log.device_id,
                  'device_name': device_name,
-                 'device_status': {0: None, 1: 'Normal', 2: 'Broken'}.get(g_log.device_status),
+                 'device_status': g_log.device_status,
                  'start_time': g_log.start_time.replace(tzinfo=utc).astimezone(tzchina).strftime('%Y/%m/%d-%H:%M:%S'),
                  'h2o_before': g_log.h2o_before,
                  'o2_before': g_log.o2_before,

@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+{% import "bootstrap/wtf.html" as wtf %}
+
+{% block title %}Log{% endblock %}
+
+{% block page_content %}
+<div class="page-header">
+	<h2>The device is {{ status }} now.</h2>
+	<p>Please fill in the following log form for recording the device's new status</p>
+</div>
+{{ wtf.quick_form(form) }}
+{% endblock %}
+
+{% block scripts %}
+{{ super() }}
+{% endblock %}

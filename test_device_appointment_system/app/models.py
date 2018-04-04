@@ -54,7 +54,7 @@ class Device(db.Model):
     __tablename__ = 'devices'
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(64), unique=True)
-    status = db.Column(db.Boolean, default=True, index=True)
+    status = db.Column(db.String(32), server_default='Normal', index=True)
     details  = db.Column(db.Text())
     # secret_key = db.Column(db.String(64))
     # devices and users have a middle-table user_device
@@ -63,6 +63,8 @@ class Device(db.Model):
                             backref=db.backref('devices', lazy=True))
     # add in-use to determine whether the device is in use
     device_inuse = db.Column(db.Boolean, default=False)
+    # add state_transfer to determine whether the device's status is changed
+    state_transfer = db.Column(db.Boolean, default=False)
     '''def __init__(self):
         keygen = KeyGenerator()
         key = keygen.generator()
@@ -188,7 +190,7 @@ class UserLog(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     user_name = db.Column(db.String(64))
     device_id = db.Column(db.Integer)
-    device_status = db.Column(db.Boolean, default=True, index=True)
+    device_status = db.Column(db.String(32), default='Normal', index=True)
     log_time = db.Column(db.DateTime(), default=datetime.utcnow)
     details = db.Column(db.Text())
 
@@ -198,7 +200,7 @@ class DeviceUsageLog(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     user_name = db.Column(db.String(64))
     device_id = db.Column(db.Integer)
-    device_status = db.Column(db.Boolean, default=True, index=True)
+    device_status = db.Column(db.String(32), default='Normal', index=True)
     start_time = db.Column(db.DateTime(), default=datetime.utcnow)
     end_time = db.Column(db.DateTime()) # onupdate=datetime.utcnow)
     material = db.Column(db.String(64))
@@ -212,7 +214,7 @@ class GloveBoxLog(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     user_name = db.Column(db.String(64))
     device_id = db.Column(db.Integer)
-    device_status = db.Column(db.Boolean, default=True, index=True)
+    device_status = db.Column(db.String(32), default='Normal', index=True)
     h2o_before = db.Column(db.Float)
     o2_before = db.Column(db.Float)
     ar_before = db.Column(db.Float)

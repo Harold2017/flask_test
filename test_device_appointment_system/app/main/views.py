@@ -8,6 +8,9 @@ from .forms import EditUserForm, Item, ItemTable, EditDeviceForm
 from ..QRcode.QRcode import qr_generator
 
 
+BASEURL = 'http://namihk.test.ngrok.io'
+
+
 def find_users(device):
     uds = db.session.query(user_device).filter_by(device_id=device.id).all()
     users = []
@@ -53,14 +56,14 @@ def edit():
     for device in devices:
         img_path = "../static/QRcode/Device" + str(device.id) + '.png'
         if DeviceUsageLog.query.filter_by(device_id=device.id).first():
-            logs = "http://namihk.com/form/device_log/" + str(device.id)
+            logs = BASEURL + "/form/device_log/" + str(device.id)
         elif GloveBoxLog.query.filter_by(device_id=device.id).first():
-            logs = "http://namihk.com/form/glovebox/glovebox_log/" + str(device.id)
+            logs = BASEURL + "/form/glovebox/glovebox_log/" + str(device.id)
         else:
             logs = None
         device_list.append({"id": device.id,
                             "name": device.name,
-                            "status": 'Normal' if device.status else 'Broken',
+                            "status": device.status,
                             "details": device.details,
                             "img_path": img_path,
                             "users": find_users(device),
@@ -89,8 +92,7 @@ def edit_device():
         device_type = form.device_type.data
         print(device_type)
         device = Device(name=name)
-        if status:
-            device.status = True if status == 'True' else False
+        device.status = status
         if details:
             device.details = details
         if users:
@@ -106,10 +108,10 @@ def edit_device():
         db.session.commit()
         flash("Device updated!")
         if device_type == 0:
-            baseUrl = 'http://www.namihk.com/form/'
+            baseUrl = BASEURL + '/form/'
             qr_generator(baseUrl, device.id)
         elif device_type == 1:
-            baseUrl = 'http://www.namihk.com/form/glovebox/'
+            baseUrl = BASEURL + '/form/glovebox/'
             qr_generator(baseUrl, device.id)
         else:
             pass
