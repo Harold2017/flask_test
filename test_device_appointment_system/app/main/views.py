@@ -8,7 +8,7 @@ from .forms import EditUserForm, Item, ItemTable, EditDeviceForm
 from ..QRcode.QRcode import qr_generator
 
 
-BASEURL = 'http://namihk.test.ngrok.io'
+BASEURL = 'http://namihk.com'
 
 
 def find_users(device):
