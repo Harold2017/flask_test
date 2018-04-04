@@ -63,6 +63,8 @@ class Device(db.Model):
                             backref=db.backref('devices', lazy=True))
     # add in-use to determine whether the device is in use
     device_inuse = db.Column(db.Boolean, default=False)
+    # add state_transfer to determine whether the device's status is changed
+    state_transfer = db.Column(db.Boolean, default=False)
     '''def __init__(self):
         keygen = KeyGenerator()
         key = keygen.generator()
