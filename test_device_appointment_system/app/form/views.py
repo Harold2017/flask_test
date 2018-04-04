@@ -35,7 +35,9 @@ def log(device_id):
                 try:
                     device_usage_log = DeviceUsageLog(user_name=user, device_id=device_id, device_status=status, material=material, details=details)
                     db.session.add(device_usage_log)
-                    device.status = status
+                    if status != device.status:
+                        device.status = status
+                        device.state_transfer = True
                     device.device_inuse = True
                     db.session.commit()
                     return render_template('log/success.html')
@@ -57,7 +59,9 @@ def log(device_id):
                     device_usage_log.end_time = end_time
                     device_usage_log.product = product
                     device_usage_log.remarks = remarks
-                    device.status = status
+                    if status != device.status:
+                        device.status = status
+                        device.state_transfer = True
                     device.device_inuse = False
                     db.session.commit()
                     return render_template('log/success.html')
@@ -158,7 +162,9 @@ def glovebox(device_id):
                 try:
                     gloveboxlog = GloveBoxLog(user_name=user, device_id=device_id, device_status=status, h2o_before=h2o_before, o2_before=o2_before, ar_before=ar_before, pressure_before=pressure_before, material=material, details=details)
                     db.session.add(gloveboxlog)
-                    device.status = status
+                    if status != device.status:
+                        device.status = status
+                        device.state_transfer = True
                     device.device_inuse = True
                     db.session.commit()
                     return render_template('log/success.html')
@@ -186,7 +192,9 @@ def glovebox(device_id):
                     gloveboxlog.pressure_after = pressure_after
                     gloveboxlog.product = product
                     gloveboxlog.remarks = remarks
-                    device.status = status
+                    if status != device.status:
+                        device.status = status
+                        device.state_transfer = True
                     device.device_inuse = False
                     db.session.commit()
                     return render_template('log/success.html')

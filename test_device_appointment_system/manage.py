@@ -55,18 +55,15 @@ def check_log():
 def check_device_state():
     with db.app.app_context():
         devices = Device.query.all()
-        device_dict = {}
         for device in devices:
             if device.state_transfer is True:
-                device_dict[device.name] = device.status
-        for key, value in device_dict.items():
-            try:
-                send_email(EMAIL_RECEIVER, 'Device Status Changed',
-                          'log/email/status_change',
-                          device_name=key,
-                          device_status=value)
-            except Exception as e:
-                print(str(e))
+                try:
+                    send_email(EMAIL_RECEIVER, 'Device Status Changed',
+                            'log/email/status_change',
+                            device_name=device.name,
+                            device_status=device.status)
+                except Exception as e:
+                    print(str(e))
 
 
 def job_listener(event):
