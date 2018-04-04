@@ -52,6 +52,23 @@ def check_log():
                         print(str(e))
 
 
+def check_device_state():
+    with db.app.app_context():
+        devices = Device.query.all()
+        device_dict = {}
+        for device in devices:
+            if device.state_transfer is True:
+                device_dict[device.name] = device.status
+        for key, value in device_dict.items():
+            try:
+                send_email(EMAIL_RECEIVER, 'Device Status Changed',
+                          'log/email/status_change',
+                          device_name=key,
+                          device_status=value)
+            except Exception as e:
+                print(str(e))
+
+
 def job_listener(event):
     if event.exception:
         joblog = JobLog(job_name=event.job_id, excute_status=False, result=event.exception)
@@ -82,6 +99,7 @@ def test():
 
 
 if __name__ == '__main__':
-    scheduler.add_job(func=check_log, id='check_log', trigger='interval', minutes=1)
+    scheduler.add_job(func=check_log, id='check_log', trigger='interval', hours=1)
+    scheduler.add_job(func=check_device_state, id='check_device_state', trigger='interval', minutes=1)
     scheduler.add_listener(job_listener, events.EVENT_JOB_EXECUTED | events.EVENT_JOB_MISSED | events.EVENT_JOB_ERROR)
     manager.run()
