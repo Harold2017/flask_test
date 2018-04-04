@@ -27,7 +27,7 @@ def select_device():
         return render_template("appointment/select_device.html", devices=None, form=None)
     devices_for_selection = list(devices)
     for device in devices_for_selection:
-        if not device['status']:
+        if device['status'] != 'Normal':
             devices_for_selection.remove(device)
     form = DeviceSelectionForm(devices_for_selection)
     if form.validate_on_submit():

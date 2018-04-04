@@ -13,7 +13,7 @@ utc = timezone('UTC')'''
 class StartForm(FlaskForm):
     # name = StringField('Device name', validators=[Required(), Length(1, 64)])
     user = StringField('User name', validators=[Required(), Length(1, 64)])
-    status = SelectField('Device status', coerce=int, choices=[(0, 'None'), (1, 'Normal'), (2, 'Broken')], default=0,
+    status = SelectField('Device status', coerce=int, choices=[(0, 'None'), (1, 'Normal'), (2, 'Broken'), (3, 'Fixing'), (4, 'Terminated')], default=0,
                          validators=[Required()])
     material = StringField('Material', validators=[Required()])
     details = TextAreaField('Details')
@@ -21,7 +21,7 @@ class StartForm(FlaskForm):
 
 
 class EndForm(FlaskForm):
-    status = SelectField('Device status', coerce=int, choices=[(0, 'None'), (1, 'Normal'), (2, 'Broken')], default=0,
+    status = SelectField('Device status', coerce=int, choices=[(0, 'None'), (1, 'Normal'), (2, 'Broken'), (3, 'Fixing'), (4, 'Terminated')], default=0,
                         validators=[Required()])
     product = StringField('Product', validators=[Required()])
     remarks = TextAreaField('Remarks')
@@ -30,7 +30,7 @@ class EndForm(FlaskForm):
 
 class GloveBoxStartForm(FlaskForm):
     user = StringField('User name', validators=[Required(), Length(1, 64)])
-    status = SelectField('Glovebox status', coerce=int, choices=[(0, 'None'), (1, 'Normal'), (2, 'Broken')], default=0,
+    status = SelectField('Glovebox status', coerce=int, choices=[(0, 'None'), (1, 'Normal'), (2, 'Broken'), (3, 'Fixing'), (4, 'Terminated')], default=0,
                         validators=[Required()])
     h2o = FloatField('H2O(ppm)', validators=[Required()])
     o2 = FloatField('O2(ppm)', validators=[Required()])
@@ -42,7 +42,7 @@ class GloveBoxStartForm(FlaskForm):
 
 
 class GloveBoxEndForm(FlaskForm):
-    status = SelectField('Glovebox status', coerce=int, choices=[(0, 'None'), (1, 'Normal'), (2, 'Broken')], default=0,
+    status = SelectField('Glovebox status', coerce=int, choices=[(0, 'None'), (1, 'Normal'), (2, 'Broken'), (3, 'Fixing'), (4, 'Terminated')], default=0,
                         validators=[Required()])
     h2o = FloatField('H2O(ppm)', validators=[Required()])
     o2 = FloatField('O2(ppm)', validators=[Required()])
@@ -103,3 +103,9 @@ class GloveItemTable(Table):
     pressure_after = Col('Pressure(mbar) after')
     product = Col('Product')
     remarks = Col('Remarks')
+
+
+class StateTransferForm(FlaskForm):
+    status = SelectField('Device status', coerce=int, choices=[(0, 'None'), (1, 'Normal'), (2, 'Broken'), (3, 'Fixing'), (4, 'Terminated')], default=0,
+                        validators=[Required()])
+    submit = SubmitField('Submit')
