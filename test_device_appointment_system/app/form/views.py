@@ -15,12 +15,17 @@ tzchina = timezone('Asia/Shanghai')
 utc = timezone('UTC')
 
 log_folder = os.path.abspath('app') + '\\form\\log\\'
+BASEURL = 'http://namihk.com'
 
 
 @form.route('/<device_id>', methods=['GET', 'POST'])
 def log(device_id):
     device_id = int(device_id)
     device = Device.query.filter_by(id=device_id).first()
+    if DeviceUsageLog.query.filter_by(device_id=device_id).first():
+        logs = BASEURL + "/form/device_log/" + str(device_id)
+    else:
+        logs = None
     if device.status == 'Normal':
         if device.device_inuse is False:
             form = StartForm()
@@ -44,7 +49,7 @@ def log(device_id):
                 except:
                     db.session.rollback()
                     db.session.flush()
-            return render_template('log/log.html', form=form)
+            return render_template('log/log.html', form=form, logs=logs)
         else:
             form = EndForm()
             if form.validate_on_submit():
@@ -68,7 +73,7 @@ def log(device_id):
                 except:
                     db.session.rollback()
                     db.session.flush()
-            return render_template('log/log_logout.html', form=form)
+            return render_template('log/log_logout.html', form=form, logs=logs)
     elif device.status == 'Terminated':
         return render_template('log/terminated.html')
     else:
@@ -89,7 +94,7 @@ def log(device_id):
                 except:
                     db.session.rollback()
                     db.session.flush()
-        return render_template('log/state_transfer.html', status=status, form=form)
+        return render_template('log/state_transfer.html', status=status, form=form, logs=logs)
 
 '''def log(device_id):
     form = LogForm()
@@ -145,6 +150,10 @@ def device_log(device_id):
 def glovebox(device_id):
     device_id = int(device_id)
     device = Device.query.filter_by(id=device_id).first()
+    if GloveBoxLog.query.filter_by(device_id=device_id).first():
+        logs = BASEURL + "/form/glovebox/glovebox_log/" + str(device_id)
+    else:
+        logs = None
     if device.status == 'Normal':
         if device.device_inuse is False:
             form = GloveBoxStartForm()
@@ -171,7 +180,7 @@ def glovebox(device_id):
                 except:
                     db.session.rollback()
                     db.session.flush()
-            return render_template('log/log.html', form=form)
+            return render_template('log/log.html', form=form, logs=logs)
         else:
             form = GloveBoxEndForm()
             if form.validate_on_submit():
@@ -201,7 +210,7 @@ def glovebox(device_id):
                 except:
                     db.session.rollback()
                     db.session.flush()
-            return render_template('log/log_logout.html', form=form)
+            return render_template('log/log_logout.html', form=form, logs=logs)
     elif device.status == 'Terminated':
         return render_template('log/terminated.html')
     else:
@@ -222,7 +231,7 @@ def glovebox(device_id):
                 except:
                     db.session.rollback()
                     db.session.flush()
-        return render_template('log/state_transfer.html', status=status, form=form)
+        return render_template('log/state_transfer.html', status=status, form=form, logs=logs)
 
 
 @form.route('/glovebox/glovebox_log/<device_id>')
