@@ -37,12 +37,17 @@ def index():
     # print(isinstance(current_user, User))
     if current_user.is_administrator():
         show_edit = True
+    elif hasattr(current_user, 'email'):
+        if current_user.email == 'jimmywlhon@nami.org.hk':
+            show_edit = True
+    else:
+        pass
     return render_template("index.html", show_edit=show_edit)
 
 
 @main.route('/edit', methods=['GET', 'POST'])
 @login_required
-@admin_required
+# @admin_required
 def edit():
     devices = Device.query.all()
     users = User.query.all()
