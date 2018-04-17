@@ -22,10 +22,7 @@ BASEURL = 'http://namihk.com'
 def log(device_id):
     device_id = int(device_id)
     device = Device.query.filter_by(id=device_id).first()
-    if DeviceUsageLog.query.filter_by(device_id=device_id).first():
-        logs = BASEURL + "/form/device_log/" + str(device_id)
-    else:
-        logs = None
+    logs = BASEURL + "/form/device_log/" + str(device_id)
     if device.status == 'Normal':
         if device.device_inuse is False:
             form = StartForm()
