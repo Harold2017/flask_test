@@ -74,6 +74,8 @@ def confirm(user_email):
             c_d = Device.query.filter_by(id=int(c_d)).first_or_404()
             c_d.users.append(user)
             db.session.add(c_d)
+        application.confirmed_devices = c_devices
+        db.session.add(application)
         try:
             db.session.commit()
             flash('User Device Confirmed.')
