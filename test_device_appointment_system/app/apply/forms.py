@@ -1,6 +1,7 @@
 from flask_wtf import FlaskForm
 from wtforms import StringField, SubmitField, SelectMultipleField, widgets
 from wtforms.validators import Required
+from flask_table import Table, Col
 
 
 '''
@@ -34,4 +35,14 @@ class ConfirmForm(FlaskForm):
         super(ConfirmForm, self).__init__(*args, **kwargs)
         self.device.choices = [(device.id, device.name) for device in devices]
         self.devices = devices
+
+
+class ApplicationTable(Table):
+    user_email = Col('User Email')
+    devices = Col('Applied Devices')
+    classes = ['table', 'table-bordered']
+    application_time = Col('Application Time')
+    handled_time = Col('Handled Time')
+    approved_devices = Col('Approved Devices')
+    application_state = Col('Application State')
 

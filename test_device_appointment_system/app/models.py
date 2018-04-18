@@ -247,6 +247,7 @@ class ApplicationLog(db.Model):
     user_email = db.Column(db.String(64))
     devices = db.Column(db.String(128))
     application_time = db.Column(db.DateTime(), default=datetime.utcnow)
-    confirm_time = db.Column(db.DateTime(), onupdate=datetime.utcnow)
-    confirmed_devices = db.Column(db.String(128))
+    handled_time = db.Column(db.DateTime(), onupdate=datetime.utcnow)
+    approved_devices = db.Column(db.String(128))
+    application_state = db.Column(db.String(32), default='Apply')
 

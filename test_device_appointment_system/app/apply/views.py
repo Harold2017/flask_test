@@ -1,5 +1,5 @@
 from . import apply
-from .forms import DeviceForm, ConfirmForm # ChoiceObj
+from .forms import DeviceForm, ConfirmForm, ApplicationTable # ChoiceObj
 from flask import render_template, flash # session
 from flask_login import login_required, current_user
 from ..decorators import admin_required
@@ -61,32 +61,43 @@ def confirm(user_email):
     application = ApplicationLog.query.filter_by(user_email=user_email).order_by(desc(ApplicationLog.id)).first()
     # print(type(application.devices))
     # devices = [int(d.strip()) for d in ast.literal_eval(application.devices)]
-    devices = [int(d) for d in ast.literal_eval(application.devices)]
-    # print(type(devices))
-    d_list = []
-    for d in devices:
-        d_list.append(Device.query.filter_by(id=d).first())
-    form = ConfirmForm(devices=d_list)
-    if form.validate_on_submit():
-        c_devices = form.device.data
-        user = User.query.filter_by(email=user_email).first_or_404()
-        d_names = []
-        for c_d in c_devices:
-            c_d = Device.query.filter_by(id=int(c_d)).first_or_404()
-            c_d.users.append(user)
-            d_names.append(c_d.name)
-            db.session.add(c_d)
-        application.confirmed_devices = c_devices
-        db.session.add(application)
-        try:
-            db.session.commit()
-            send_email(user_email, 'Application Confirmed',
+    if application.application_state == 'Apply':
+        devices = [int(d) for d in ast.literal_eval(application.devices)]
+        # print(type(devices))
+        d_list = []
+        for d in devices:
+            d_list.append(Device.query.filter_by(id=d).first())
+        form = ConfirmForm(devices=d_list)
+        if form.validate_on_submit():
+            c_devices = form.device.data
+            user = User.query.filter_by(email=user_email).first_or_404()
+            d_names = []
+            for c_d in c_devices:
+                c_d = Device.query.filter_by(id=int(c_d)).first_or_404()
+                c_d.users.append(user)
+                d_names.append(c_d.name)
+                db.session.add(c_d)
+            application.approved_devices = c_devices
+            application.application_state = 'Approved'
+            db.session.add(application)
+            try:
+                db.session.commit()
+                send_email(user_email, 'Application Confirmed',
                       'apply/email/approve',
                        devices=d_names)
-            flash('User Device approved.')
-        except:
-            db.session.rollback()
-            db.session.flush()
+                flash('User Device approved.')
+            except:
+                db.session.rollback()
+                db.session.flush()
+    else:
+        a_dict = {'user_email': application.user_email,
+                  'devices': application.devices,
+                  'application_time':application.application_time,
+                  'handled_time': application.handled_time,
+                  'approved_devices': application.approved_devices,
+                  'application_state': application.application_state}
+        table = ApplicationTable([a_dict])
+        return render_template('apply/handled.html', table=table)
     return render_template('apply/confirm.html', user_email=user_email, form=form)
 
 
@@ -95,6 +106,14 @@ def confirm(user_email):
 @admin_required
 def reject(user_email):
     # print(user_email)
+    application = ApplicationLog.query.filter_by(user_email=user_email).order_by(desc(ApplicationLog.id)).first()
+    application.application_state = 'Rejected'
+    try:
+        db.session.add(application)
+        db.session.commit()
+    except:
+        db.session.rollback()
+        db.session.flush()
     send_email(user_email, 'Application Rejected',
               'apply/email/reject')
     flash('Reject email has been sent to user.')
