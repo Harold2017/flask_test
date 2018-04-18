@@ -44,5 +44,17 @@ def calendar():
     # print(selected_device)
     # print(url_for('api.return_data', device_id=selected_device))
     user = User.query.filter_by(id=current_user.id).first()
+    devices = find_devices(current_user)
+    if len(devices) == 0:
+        flash("You have no access to any devices, please apply first!")
+        return redirect(url_for('apply.apply_device'))
+    device_permission = False
+    for device in list(devices):
+        if device["id"] == int(selected_device):
+            device_permission = True
+            break
+    if device_permission == False:
+        flash("You have no access to this device, please apply first!")
+        return redirect(url_for('apply.apply_device'))
     token = user.avatar_hash
     return render_template("appointment/calendar.html", device_id=selected_device, token=token)

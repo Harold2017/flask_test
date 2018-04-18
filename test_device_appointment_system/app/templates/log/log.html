@@ -9,6 +9,7 @@
 </div>
 {{ wtf.quick_form(form) }}
 <div class="container">
+	<p>Booking this device by this <a href="{{ url_for('appointment.calendar', selected_device=device_id) }}">link</a>.</p>
 	<p>See the usage <a href={{ logs }} target="_blank">Log</a> for your reference.</p>
 </div>
 {% endblock %}
