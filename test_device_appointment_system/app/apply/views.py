@@ -70,17 +70,32 @@ def confirm(user_email):
     if form.validate_on_submit():
         c_devices = form.device.data
         user = User.query.filter_by(email=user_email).first_or_404()
+        d_names = []
         for c_d in c_devices:
             c_d = Device.query.filter_by(id=int(c_d)).first_or_404()
             c_d.users.append(user)
+            d_names.append(c_d.name)
             db.session.add(c_d)
         application.confirmed_devices = c_devices
         db.session.add(application)
         try:
             db.session.commit()
-            flash('User Device Confirmed.')
+            send_email(user_email, 'Application Confirmed',
+                      'apply/email/approve',
+                       devices=d_names)
+            flash('User Device approved.')
         except:
             db.session.rollback()
             db.session.flush()
     return render_template('apply/confirm.html', user_email=user_email, form=form)
 
+
+@apply.route('/reject/<user_email>', methods=['GET', 'POST'])
+@login_required
+@admin_required
+def reject(user_email):
+    # print(user_email)
+    send_email(user_email, 'Application Rejected',
+              'apply/email/reject')
+    flash('Reject email has been sent to user.')
+    return render_template('apply/reject.html')

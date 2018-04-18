@@ -1,0 +1,8 @@
+Dear user,
+
+Please notice that your application for {{ devices }} has been approved.
+
+Please use this <a href='http://namihk.com/appointment/'>Link</a> for booking devices.
+
+Sincerely,
+Admin

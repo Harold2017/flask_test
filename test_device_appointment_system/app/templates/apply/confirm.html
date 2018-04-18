@@ -9,5 +9,7 @@
 </div>
 <p>User Email: {{ user_email }}</p>
 {{ wtf.quick_form(form) }}
+<a href="{{ url_for('apply.reject', user_email=user_email) }}" class="btn btn-default">Reject</a>
+
 {% endblock %}
 

@@ -1,0 +1,6 @@
+Dear user,
+
+Please notice that your application has been rejected.
+
+Sincerely,
+Admin
