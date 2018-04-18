@@ -6,7 +6,23 @@
 {% block page_content %}
 <div class="page-header">
     <h1>Hello!</h1>
+    <p>Welcome to NAMI smart lab management platform!</p>
 </div>
+<div class="container">
+	<h3>Register</h3>
+	<p>Hi, <a href="{{ url_for('auth.register') }}">Register</a> now!</p>
+</div>
+<div class="container">
+	<h3>Log In</h3>
+	<p>You should <a href="{{ url_for('auth.login') }}">Log In</a> first if you want to use our service.</p>
+</div>
+<div class="container">
+	<h3>Booking Device</h3>
+	<p>1. Register and log in</p>
+	<p>2. Fill in the device usage application form on <mark>Apply</mark> page of navagator bar.</p>
+	<p>3. Waiting for admin's approval. An email will send to you after admin handled your application.</p>
+	<pre>If your application is approved, you can book the corresponding device on <mark>Appointment</mark> page of navagator bar.</pre>
+	<pre>If your application is rejected, please contact admin for more information.</pre>
 {% endblock %}
 
 {% block scripts %}
