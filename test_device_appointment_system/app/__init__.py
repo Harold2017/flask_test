@@ -45,6 +45,9 @@ def create_app(config_name):
     from .form import form as form_blueprint
     app.register_blueprint(form_blueprint, url_prefix='/form')
 
+    from .apply import apply as apply_blueprint
+    app.register_blueprint(apply_blueprint, url_prefix='/apply')
+
     try:
         return app
     except:

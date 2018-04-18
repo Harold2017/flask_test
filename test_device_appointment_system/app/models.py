@@ -240,3 +240,13 @@ class JobLog(db.Model):
     excute_status = db.Column(db.Boolean, default=True, index=True)
     result = db.Column(db.Text(), default=None)
 
+
+class ApplicationLog(db.Model):
+    __tablename__ = 'applicationlogs'
+    id = db.Column(db.Integer, primary_key=True)
+    user_email = db.Column(db.String(64))
+    devices = db.Column(db.String(128))
+    application_time = db.Column(db.DateTime(), default=datetime.utcnow)
+    confirm_time = db.Column(db.DateTime(), onupdate=datetime.utcnow)
+    confirmed_devices = db.Column(db.String(128))
+
