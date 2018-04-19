@@ -2,7 +2,7 @@ from . import apply
 from .forms import DeviceForm, ConfirmForm, ApplicationTable # ChoiceObj
 from flask import render_template, flash # session
 from flask_login import login_required, current_user
-from ..decorators import admin_required
+# from ..decorators import admin_required
 from ..models import Device, User, user_device, ApplicationLog
 from ..email import send_email
 from .. import db
@@ -56,8 +56,10 @@ def apply_device():
 
 @apply.route('/confirm/<user_email>', methods=['GET', 'POST'])
 @login_required
-@admin_required
+# @admin_required
 def confirm(user_email):
+    if current_user.email not in email_receiver and current_user.email != 'harold@harold.com':
+        return render_template('403.html'), 403
     application = ApplicationLog.query.filter_by(user_email=user_email).order_by(desc(ApplicationLog.id)).first()
     # print(type(application.devices))
     # devices = [int(d.strip()) for d in ast.literal_eval(application.devices)]
@@ -103,9 +105,11 @@ def confirm(user_email):
 
 @apply.route('/reject/<user_email>', methods=['GET', 'POST'])
 @login_required
-@admin_required
+# @admin_required
 def reject(user_email):
     # print(user_email)
+    if current_user.email not in email_receiver and current_user.email != 'harold@harold.com':
+        return render_template('403.html'), 403
     application = ApplicationLog.query.filter_by(user_email=user_email).order_by(desc(ApplicationLog.id)).first()
     application.application_state = 'Rejected'
     try:
