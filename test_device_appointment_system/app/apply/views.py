@@ -16,7 +16,7 @@ email_receiver = ['peixindu@nami.org.hk', 'jimmywlhon@nami.org.hk']
 @apply.route('/device', methods=['GET', 'POST'])
 @login_required
 def apply_device():
-    devices = Device.query.all()
+    devices = Device.query.filter(~Device.name.op('regexp')('test.*')).all()
     # selectedChoices = ChoiceObj('devices', session.get(selected))
     # form = DeviceForm(obj=selectedChoices, devices=devices)
     form = DeviceForm(devices=devices)

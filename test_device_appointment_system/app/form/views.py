@@ -46,7 +46,7 @@ def log(device_id):
                 except:
                     db.session.rollback()
                     db.session.flush()
-            return render_template('log/log.html', form=form, logs=logs)
+            return render_template('log/log.html', device_id=device_id, form=form, logs=logs)
         else:
             form = EndForm()
             if form.validate_on_submit():
@@ -177,7 +177,7 @@ def glovebox(device_id):
                 except:
                     db.session.rollback()
                     db.session.flush()
-            return render_template('log/log.html', form=form, logs=logs)
+            return render_template('log/log.html', device_id=device_id, form=form, logs=logs)
         else:
             form = GloveBoxEndForm()
             if form.validate_on_submit():
