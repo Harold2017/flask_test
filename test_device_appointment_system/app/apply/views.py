@@ -17,8 +17,16 @@ email_receiver = ['peixindu@nami.org.hk', 'jimmywlhon@nami.org.hk']
 @login_required
 def apply_device():
     devices = Device.query.filter(~Device.name.op('regexp')('test.*')).all()
+    uds = db.session.query(user_device).filter_by(user_id=current_user.id).all()
+    for ud in uds:
+        device = Device.query.filter_by(id=ud.device_id).first()
+        for d in devices:
+            if device.id == d.id:
+                devices.remove(d)
     # selectedChoices = ChoiceObj('devices', session.get(selected))
     # form = DeviceForm(obj=selectedChoices, devices=devices)
+    if len(devices) == 0:
+        return render_template('apply/apply_device.html', form=None)
     form = DeviceForm(devices=devices)
     if form.validate_on_submit():
         # session['selected'] = form.devices.data
