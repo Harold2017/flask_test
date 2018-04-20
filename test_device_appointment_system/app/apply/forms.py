@@ -46,3 +46,11 @@ class ApplicationTable(Table):
     approved_devices = Col('Approved Devices')
     application_state = Col('Application State')
 
+
+class DeviceTable(Table):
+    classes = ['table', 'table-bordered']
+    device_id = Col('Device ID')
+    device_name = Col('Device Name')
+    device_status = Col('Status')
+    device_details = Col('Details')
+

@@ -7,6 +7,14 @@
 <div class="page-header">
 	<h1>Apply</h1>
 </div>
+
+{% if table %}
+<div class="container">
+	<p>You already have access to the following devices:</p>
+	{{ table }}
+</div>
+{% endif %}
+
 {% if form %}
 <div class="container">
 	<!--form action="" method="post">
