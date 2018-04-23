@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+{% import "bootstrap/wtf.html" as wtf %}
+{% block page_content %}
+
+<script type="text/javascript" src="https://cdn.bootcss.com/echarts/3.7.2/echarts.min.js"></script>
+
+<div class="page-header">
+	<h1>Analysis</h1>
+</div>
+
+<div>
+	{{ gauge|safe }}
+</div>
+<div class="container">
+	{{ wtf.quick_form(form) }}
+</div>
+{% if bar %}
+<div>
+	{{ bar|safe }}
+</div>
+{% endif %}
+{% endblock %}
+

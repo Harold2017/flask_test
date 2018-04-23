@@ -48,6 +48,9 @@ def create_app(config_name):
     from .apply import apply as apply_blueprint
     app.register_blueprint(apply_blueprint, url_prefix='/apply')
 
+    from .analysis import analysis as analysis_blueprint
+    app.register_blueprint(analysis_blueprint, url_prefix='/analysis')
+
     try:
         return app
     except:
