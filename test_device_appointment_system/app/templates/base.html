@@ -37,6 +37,9 @@
 	    <ul class="nav navbar-nav">
 		<li><a href="{{ url_for('apply.apply_device') }}">Apply</a></li>
 	    </ul>
+	    <ul class="nav navbar-nav">
+		    <li><a href="{{ url_for('analysis.main') }}">Analysis</a></li>
+	    </ul>
             {% endif %}
             <ul class="nav navbar-nav navbar-right">
                 {% if current_user.is_authenticated %}
