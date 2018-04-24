@@ -11,6 +11,14 @@
 <div>
 	{{ gauge|safe }}
 </div>
+
+{% if table %}
+<div class="container">
+	<b>In-use Devices:</b>
+	{{ table }}
+</div>
+{% endif %}
+
 <div class="container">
 	{{ wtf.quick_form(form) }}
 </div>

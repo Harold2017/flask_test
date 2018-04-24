@@ -7,7 +7,7 @@ from pytz import timezone
 from sqlalchemy import desc
 from flask_login import login_required, current_user
 from pyecharts import Pie, Line, Overlap, Gauge, Bar
-from .forms import DeviceForm
+from .forms import DeviceForm, DeviceInUseTable
 
 
 tzchina = timezone('Asia/Shanghai')
@@ -23,9 +23,27 @@ def days_hours_minutes(td):
 def main():
     devices = Device.query.filter(~Device.name.op('regexp')('test.*')).all()
     cnt = 0
+    d_list = []
     for d in devices:
         if d.device_inuse is True:
             cnt += 1
+            if DeviceUsageLog.query.filter_by(device_id=d.id).first():
+                log = DeviceUsageLog.query.filter_by(device_id=d.id).order_by(desc(DeviceUsageLog.id)).first()
+            else:
+                log = GloveBoxLog.query.filter_by(device_id=d.id).order_by(desc(GloveBoxLog.id)).first()
+            d_list.append({
+                "user_name": log.user_name,
+                "device_id": log.device_id,
+                "device_name": d.name,
+                "device_status": log.device_status,
+                "start_time": log.start_time,
+                "material": log.material,
+                "details": log.details
+            })
+    if len(d_list) == 0:
+        table = None
+    else:
+        table = DeviceInUseTable(d_list)
     percentage = round(cnt / len(devices) * 100, 2)
     gauge = usage_gauge(percentage, is_legend_show=False)
     bar = None
@@ -60,7 +78,7 @@ def main():
                 attr.append(key)
                 v.append(value)
             bar = usage_bar(attr, v).render_embed()
-    return render_template('analysis/main.html', form=form, gauge=gauge.render_embed(), bar=bar)
+    return render_template('analysis/main.html', form=form, table=table, gauge=gauge.render_embed(), bar=bar)
 
 
 def usage_gauge(percentage, angle_range=[225, -45], scale_range=[0, 100], is_legend_show=True):
