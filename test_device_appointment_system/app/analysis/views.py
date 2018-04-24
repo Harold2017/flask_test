@@ -36,7 +36,7 @@ def main():
                 "device_id": log.device_id,
                 "device_name": d.name,
                 "device_status": log.device_status,
-                "start_time": log.start_time,
+                "start_time": log.start_time.replace(tzinfo=utc).astimezone(tzchina).strftime('%Y/%m/%d-%H:%M:%S'),
                 "material": log.material,
                 "details": log.details
             })
