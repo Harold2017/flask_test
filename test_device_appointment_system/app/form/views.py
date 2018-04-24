@@ -118,11 +118,11 @@ def log(device_id):
 def device_log(device_id):
     device_id = int(device_id)
     if DeviceUsageLog.query.filter_by(device_id=device_id).first():
-        d_logs = DeviceUsageLog.query.filter_by(device_id=device_id).filter(DeviceUsageLog.start_time <= datetime.utcnow().date()).filter(DeviceUsageLog.start_time >= (datetime.utcnow().date() - timedelta(days=2))).all()
+        d_logs = DeviceUsageLog.query.filter_by(device_id=device_id).filter(DeviceUsageLog.start_time <= datetime.utcnow()).filter(DeviceUsageLog.start_time >= (datetime.utcnow().date() - timedelta(days=2))).order_by(desc(DeviceUsageLog.id)).all()
         if len(d_logs) >= 5:
-            d_logs = d_logs[-5:]
+            d_logs = d_logs[:5]
         else:
-            d_logs = DeviceUsageLog.query.filter_by(device_id=device_id).limit(5).all()
+            d_logs = DeviceUsageLog.query.filter_by(device_id=device_id).order_by(desc(DeviceUsageLog.id)).limit(5).all()
         device_name = Device.query.filter_by(id=device_id).first().name
         ls = []
         for d_log in d_logs:
@@ -239,11 +239,11 @@ def glovebox(device_id):
 def glovebox_log(device_id):
     device_id = int(device_id)
     if GloveBoxLog.query.filter_by(device_id=device_id).first():
-        g_logs = GloveBoxLog.query.filter_by(device_id=device_id).filter(GloveBoxLog.start_time <= datetime.utcnow().date()).filter(GloveBoxLog.start_time >= (datetime.utcnow().date() - timedelta(days=2))).all()
+        g_logs = GloveBoxLog.query.filter_by(device_id=device_id).filter(GloveBoxLog.start_time <= datetime.utcnow()).filter(GloveBoxLog.start_time >= (datetime.utcnow().date() - timedelta(days=2))).order_by(desc(GloveBoxLog.id)).all()
         if len(g_logs) >= 5:
-            g_logs = g_logs[-5:]
+            g_logs = g_logs[:5]
         else:
-            g_logs = GloveBoxLog.query.filter_by(device_id=device_id).limit(5).all()
+            g_logs = GloveBoxLog.query.filter_by(device_id=device_id).order_by(desc(GloveBoxLog.id)).limit(5).all()
         device_name = Device.query.filter_by(id=device_id).first().name
         ls = []
         for g_log in g_logs:
