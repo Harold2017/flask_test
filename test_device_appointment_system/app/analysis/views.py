@@ -7,6 +7,7 @@ from pytz import timezone
 from sqlalchemy import desc
 from flask_login import login_required, current_user
 from pyecharts import Pie, Line, Overlap, Gauge, Bar
+from pyecharts.utils import json_dumps
 from .forms import DeviceForm, DeviceInUseTable
 
 
@@ -45,7 +46,13 @@ def main():
     else:
         table = DeviceInUseTable(d_list)
     percentage = round(cnt / len(devices) * 100, 2)
-    gauge = usage_gauge(percentage, is_legend_show=False)
+    gauge = usage_gauge(percentage, is_legend_show=False).render_embed()
+    '''gauge = {
+        "id": gauge.chart_id,
+        "width": "100%",
+        "height": 600,
+        "option": json_dumps(gauge.options)
+    }'''
     bar = None
 
     form = DeviceForm(devices=devices)
@@ -79,7 +86,7 @@ def main():
                 attr.append(key)
                 v.append(value)
             bar = usage_bar(attr, v, days=days).render_embed()
-    return render_template('analysis/main.html', form=form, table=table, gauge=gauge.render_embed(), bar=bar)
+    return render_template('analysis/main.html', form=form, table=table, gauge=gauge, bar=bar)
 
 
 def usage_gauge(percentage, angle_range=[225, -45], scale_range=[0, 100], is_legend_show=True):

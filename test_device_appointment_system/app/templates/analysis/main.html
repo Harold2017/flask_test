@@ -8,6 +8,19 @@
 	<h1>Analysis</h1>
 </div>
 
+<!--div id="{{ gauge.id }}" style="width:{{ gauge.width }}; height: {{ gauge.height }}px;"></div>
+<script type="text/javascript">
+window.onload = function() {
+	setTimeout(function() {
+		var gauge_{{ gauge.id }} = echarts.init(document.getElementById('{{ gauge.id }}'));
+		var option_{{ gauge.id }} = {{ gauge.option|safe }};
+		gauge_{{ gauge.id }}.setOption(option_{{ gauge.id }});
+		window.onresize = function() {
+			gauge_{{ gauge.id }}.resize();
+		};
+	}, 0);
+};
+</script-->
 <div>
 	{{ gauge|safe }}
 </div>
