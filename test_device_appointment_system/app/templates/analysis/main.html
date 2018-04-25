@@ -22,6 +22,17 @@
 <div class="container">
 	{{ wtf.quick_form(form) }}
 </div>
+
+<script type="text/javascript">
+var slider = document.getElementsByName("slider")[0];
+slider.min = "0";
+slider.max = "30";
+var slider_value = document.getElementsByName("day")[0];
+slider.onchange = function() {
+	slider_value.value = slider.value;
+};
+</script>
+
 {% if bar %}
 <div>
 	{{ bar|safe }}

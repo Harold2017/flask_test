@@ -1,10 +1,13 @@
 from flask_wtf import FlaskForm
-from wtforms import StringField, SubmitField, SelectMultipleField
+from wtforms import StringField, SubmitField, SelectMultipleField, validators
 from flask_table import Table, Col
+from wtforms.fields.html5 import IntegerRangeField
 
 
 class DeviceForm(FlaskForm):
     device = SelectMultipleField('Devices', coerce=int)
+    slider = IntegerRangeField('Date Range', default=7, validators=[validators.NumberRange(min=1, max=30)])
+    day = StringField('', default='7', render_kw={'readonly': True})
     submit = SubmitField('Submit')
 
     def __init__(self, devices, *args, **kwargs):

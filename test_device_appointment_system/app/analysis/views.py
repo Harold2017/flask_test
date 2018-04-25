@@ -54,30 +54,31 @@ def main():
             flash('Please choose one instrument for analysis.')
         else:
             device_id = form.device.data
+            days = int(form.slider.data)
             total = {}
             for d in device_id:
                 t = timedelta(seconds=0)
                 if DeviceUsageLog.query.filter_by(device_id=d).first():
-                    d_logs = DeviceUsageLog.query.filter_by(device_id=d).filter(~DeviceUsageLog.remarks.op('regexp')('Not logout')).filter(DeviceUsageLog.start_time <= datetime.utcnow().date()).filter(DeviceUsageLog.start_time >= (datetime.utcnow().date() - timedelta(days=7))).all()
+                    d_logs = DeviceUsageLog.query.filter_by(device_id=d).filter(~DeviceUsageLog.remarks.op('regexp')('Not logout')).filter(DeviceUsageLog.start_time <= datetime.utcnow().date()).filter(DeviceUsageLog.start_time >= (datetime.utcnow().date() - timedelta(days=days))).all()
                     device_name = Device.query.filter_by(id=d).first().name
                     for d_log in d_logs:
                         delta = d_log.end_time - d_log.start_time
                         t += delta
                 elif GloveBoxLog.query.filter_by(device_id=d).first():
-                    g_logs = GloveBoxLog.query.filter_by(device_id=d).filter(~GloveBoxLog.remarks.op('regexp')('Not logout')).filter(GloveBoxLog.start_time <= datetime.utcnow().date()).filter(GloveBoxLog.start_time >= (datetime.utcnow().date() - timedelta(days=7))).all()
+                    g_logs = GloveBoxLog.query.filter_by(device_id=d).filter(~GloveBoxLog.remarks.op('regexp')('Not logout')).filter(GloveBoxLog.start_time <= datetime.utcnow().date()).filter(GloveBoxLog.start_time >= (datetime.utcnow().date() - timedelta(days=days))).all()
                     device_name = Device.query.filter_by(id=d).first().name
                     for g_log in g_logs:
                         delta = g_log.end_time - g_log.start_time
                         t += delta
                 else:
                     continue
-                total[device_name] = round(t / timedelta(hours=8 * 5) * 100, 2)
+                total[device_name] = round(t / timedelta(hours=8 * 5 * days / 7) * 100, 2)
             attr = []
             v = []
             for key, value in total.items():
                 attr.append(key)
                 v.append(value)
-            bar = usage_bar(attr, v).render_embed()
+            bar = usage_bar(attr, v, days=days).render_embed()
     return render_template('analysis/main.html', form=form, table=table, gauge=gauge.render_embed(), bar=bar)
 
 
@@ -87,7 +88,7 @@ def usage_gauge(percentage, angle_range=[225, -45], scale_range=[0, 100], is_leg
     return gauge
 
 
-def usage_bar(attr, v, is_convert=True, mark_line=["min", "max"]):
+def usage_bar(attr, v, is_convert=True, mark_line=["min", "max"], days=7):
     bar = Bar("Equipment Usage Time Percentage")
-    bar.add("Past 7 Days", attr, v, is_convert=is_convert, mark_line=mark_line, yaxis_label_textsize=8)
+    bar.add("Past "+str(days)+" days", attr, v, is_convert=is_convert, mark_line=mark_line, yaxis_label_textsize=8)
     return bar
