@@ -8,6 +8,11 @@ from ..email import send_email
 from .. import db
 from sqlalchemy import desc
 import ast
+from pytz import timezone
+
+
+tzchina = timezone('Asia/Shanghai')
+utc = timezone('UTC')
 
 
 email_receiver = ['peixindu@nami.org.hk', 'jimmywlhon@nami.org.hk']
@@ -80,14 +85,21 @@ def confirm(user_email):
     if current_user.email not in email_receiver and current_user.email != 'harold@harold.com':
         return render_template('403.html'), 403
     application = ApplicationLog.query.filter_by(user_email=user_email).order_by(desc(ApplicationLog.id)).first()
+    if application.application_state == 'Apply':
+        applications = ApplicationLog.query.filter_by(user_email=user_email).filter(application_state='Apply').order_by(desc(ApplicationLog.id)).all()
     # print(type(application.devices))
     # devices = [int(d.strip()) for d in ast.literal_eval(application.devices)]
-    if application.application_state == 'Apply':
-        devices = [int(d) for d in ast.literal_eval(application.devices)]
+        for application in applications:
+            d_list = []
+            id_list = []
+            devices = [int(d) for d in ast.literal_eval(application.devices)]
         # print(type(devices))
-        d_list = []
-        for d in devices:
-            d_list.append(Device.query.filter_by(id=d).first())
+            for d in devices:
+                if d not in id_list:
+                    id_list.append(d)
+                    d_list.append(Device.query.filter_by(id=d).first())
+                else:
+                    continue
         form = ConfirmForm(devices=d_list)
         if form.validate_on_submit():
             c_devices = form.device.data
@@ -113,8 +125,8 @@ def confirm(user_email):
     else:
         a_dict = {'user_email': application.user_email,
                   'devices': application.devices,
-                  'application_time':application.application_time,
-                  'handled_time': application.handled_time,
+                  'application_time':application.application_time.replace(tzinfo=utc).astimezone(tzchina).strftime('%Y/%m/%d-%H:%M:%S'),
+                  'handled_time': application.handled_time.replace(tzinfo=utc).astimezone(tzchina).strftime('%Y/%m/%d-%H:%M:%S'),
                   'approved_devices': application.approved_devices,
                   'application_state': application.application_state}
         table = ApplicationTable([a_dict])
