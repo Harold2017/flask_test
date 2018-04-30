@@ -6,7 +6,7 @@ from datetime import datetime, timedelta
 from pytz import timezone
 from sqlalchemy import desc
 from flask_login import login_required, current_user
-from pyecharts import Pie, Line, Overlap, Gauge, Bar
+from pyecharts import Pie, Line, Overlap, Gauge, Bar, ThemeRiver, Overlap
 from pyecharts.utils import json_dumps
 from .forms import DeviceForm, DeviceInUseTable
 
@@ -79,13 +79,15 @@ def main():
                         t += delta
                 else:
                     continue
-                total[device_name] = round(t / timedelta(hours=8 * 5 * days / 7) * 100, 2)
+                total[device_name] = [round(t / timedelta(hours=8 * 5 * days / 7) * 100, 2), round(t / timedelta(hours=1), 2)]
             attr = []
             v = []
+            v2 = []
             for key, value in total.items():
                 attr.append(key)
-                v.append(value)
-            bar = usage_bar(attr, v, days=days).render_embed()
+                v.append(value[0])
+                v2.append(value[1])
+            bar = usage_bar(attr, v, v2, days=days).render_embed()
     return render_template('analysis/main.html', form=form, table=table, gauge=gauge, bar=bar)
 
 
@@ -95,7 +97,24 @@ def usage_gauge(percentage, angle_range=[225, -45], scale_range=[0, 100], is_leg
     return gauge
 
 
-def usage_bar(attr, v, is_convert=True, mark_line=["min", "max"], days=7):
-    bar = Bar("Equipment Usage Time Percentage")
+def label_formatter(params):
+    return params.value + '%'
+
+
+def usage_bar(attr, v, v2, is_convert=True, mark_line=["min", "max"], days=7):
+    bar = Bar("Equipment Usage", "Bar: time percentage, Line: hours")
+    # bar.add("Past "+str(days)+" days", attr, v, is_convert=is_convert, mark_line=mark_line, yaxis_label_textsize=8, is_label_show=True, label_formatter=label_formatter)
     bar.add("Past "+str(days)+" days", attr, v, is_convert=is_convert, mark_line=mark_line, yaxis_label_textsize=8)
-    return bar
+    line = Line()
+    line.add("Usage hours", attr, v2)
+
+    overlap = Overlap()
+    overlap.add(bar)
+    overlap.add(line)
+    return overlap
+
+
+def usage_river(title, classes, data, is_label_show=True):
+    tr = ThemeRiver(title)
+    tr.add(classes, data, is_label_show=is_label_show)
+    return tr
