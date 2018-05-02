@@ -5,6 +5,7 @@ from config import config
 from flask_login import LoginManager
 from flask_apscheduler import APScheduler
 from flask_mail import Mail
+import flask_monitoringdashboard as dashboard
 
 
 scheduler = APScheduler()
@@ -17,6 +18,9 @@ login_manager.session_protection = 'strong'
 login_manager.login_view = 'auth.login'
 
 
+dashboard.config.init_from(file='dashboard_config.cfg')
+
+
 def create_app(config_name):
     app = Flask(__name__)
     app.config.from_object(config[config_name])
@@ -27,6 +31,8 @@ def create_app(config_name):
     db.init_app(app)
     mail.init_app(app)
     login_manager.init_app(app)
+
+    dashboard.bind(app)
     scheduler.init_app(app)
     scheduler.start()
 
