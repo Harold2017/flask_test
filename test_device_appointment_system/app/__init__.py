@@ -18,7 +18,7 @@ login_manager.session_protection = 'strong'
 login_manager.login_view = 'auth.login'
 
 
-dashboard.config.init_from(file='dashboard_config.cfg')
+# dashboard.config.init_from(file='dashboard_config.cfg')
 
 
 def create_app(config_name):
@@ -33,8 +33,8 @@ def create_app(config_name):
     login_manager.init_app(app)
 
     dashboard.bind(app)
-    scheduler.init_app(app)
-    scheduler.start()
+    # scheduler.init_app(app)
+    # scheduler.start()
 
     from .api import api as api_blueprint
     app.register_blueprint(api_blueprint, url_prefix='/api')
