@@ -46,6 +46,17 @@ server {
     proxy_read_timeout 500s;
     proxy_send_timeout 500s;
   }
+  
+  location ~ ^/(images|javascript|js|css|static|png|jpg|jpeg|bmp)/ {
+    root .../app;
+    access_log off;
+    expires 30d;
+  }
+  
+  error_page 500 502 503 504 /50x.html;
+  location = /50x.html {
+    root html;
+  }
 }
 
 :w !sudo tee %
