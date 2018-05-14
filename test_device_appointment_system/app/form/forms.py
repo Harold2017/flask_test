@@ -1,8 +1,10 @@
 from flask_wtf import FlaskForm
 from wtforms import StringField, TextAreaField, SelectField, \
-    SubmitField, FloatField
+    SubmitField, FloatField, IntegerField, BooleanField
+from wtforms.fields.html5 import DateTimeField
 from wtforms.validators import Required, Length
 from flask_table import Table, Col
+
 '''from pytz import timezone
 
 
@@ -13,7 +15,9 @@ utc = timezone('UTC')'''
 class StartForm(FlaskForm):
     # name = StringField('Device name', validators=[Required(), Length(1, 64)])
     user = StringField('User name', validators=[Required(), Length(1, 64)])
-    status = SelectField('Device status', coerce=int, choices=[(0, 'None'), (1, 'Normal'), (2, 'Broken'), (3, 'Fixing'), (4, 'Terminated')], default=0,
+    status = SelectField('Device status', coerce=int,
+                         choices=[(0, 'None'), (1, 'Normal'), (2, 'Broken'), (3, 'Fixing'), (4, 'Terminated')],
+                         default=0,
                          validators=[Required()])
     material = StringField('Material', validators=[Required()])
     details = TextAreaField('Details')
@@ -21,8 +25,10 @@ class StartForm(FlaskForm):
 
 
 class EndForm(FlaskForm):
-    status = SelectField('Device status', coerce=int, choices=[(0, 'None'), (1, 'Normal'), (2, 'Broken'), (3, 'Fixing'), (4, 'Terminated')], default=0,
-                        validators=[Required()])
+    status = SelectField('Device status', coerce=int,
+                         choices=[(0, 'None'), (1, 'Normal'), (2, 'Broken'), (3, 'Fixing'), (4, 'Terminated')],
+                         default=0,
+                         validators=[Required()])
     product = StringField('Product', validators=[Required()])
     remarks = TextAreaField('Remarks')
     submit = SubmitField('Submit')
@@ -30,8 +36,10 @@ class EndForm(FlaskForm):
 
 class GloveBoxStartForm(FlaskForm):
     user = StringField('User name', validators=[Required(), Length(1, 64)])
-    status = SelectField('Glovebox status', coerce=int, choices=[(0, 'None'), (1, 'Normal'), (2, 'Broken'), (3, 'Fixing'), (4, 'Terminated')], default=0,
-                        validators=[Required()])
+    status = SelectField('Glovebox status', coerce=int,
+                         choices=[(0, 'None'), (1, 'Normal'), (2, 'Broken'), (3, 'Fixing'), (4, 'Terminated')],
+                         default=0,
+                         validators=[Required()])
     h2o = FloatField('H2O(ppm)', validators=[Required()])
     o2 = FloatField('O2(ppm)', validators=[Required()])
     ar = FloatField('Ar(psi)', validators=[Required()])
@@ -42,8 +50,10 @@ class GloveBoxStartForm(FlaskForm):
 
 
 class GloveBoxEndForm(FlaskForm):
-    status = SelectField('Glovebox status', coerce=int, choices=[(0, 'None'), (1, 'Normal'), (2, 'Broken'), (3, 'Fixing'), (4, 'Terminated')], default=0,
-                        validators=[Required()])
+    status = SelectField('Glovebox status', coerce=int,
+                         choices=[(0, 'None'), (1, 'Normal'), (2, 'Broken'), (3, 'Fixing'), (4, 'Terminated')],
+                         default=0,
+                         validators=[Required()])
     h2o = FloatField('H2O(ppm)', validators=[Required()])
     o2 = FloatField('O2(ppm)', validators=[Required()])
     ar = FloatField('Ar(psi)', validators=[Required()])
@@ -106,6 +116,34 @@ class GloveItemTable(Table):
 
 
 class StateTransferForm(FlaskForm):
-    status = SelectField('Device status', coerce=int, choices=[(0, 'None'), (1, 'Normal'), (2, 'Broken'), (3, 'Fixing'), (4, 'Terminated')], default=0,
-                        validators=[Required()])
+    status = SelectField('Device status', coerce=int,
+                         choices=[(0, 'None'), (1, 'Normal'), (2, 'Broken'), (3, 'Fixing'), (4, 'Terminated')],
+                         default=0,
+                         validators=[Required()])
     submit = SubmitField('Submit')
+
+
+fields = {'INT': IntegerField,
+          'VAR': StringField,
+          'TEX': TextAreaField,
+          'TIN': BooleanField,
+          'TIM': DateTimeField,
+          'FLO': FloatField
+          }
+
+
+def generate_form(columns, **kwargs):
+
+    class BaseForm(FlaskForm):
+        user = StringField('User name', validators=[Required(), Length(1, 64)])
+        status = SelectField('Device status', coerce=int,
+                             choices=[(0, 'None'), (1, 'Normal'), (2, 'Broken'), (3, 'Fixing'), (4, 'Terminated')],
+                             default=0,
+                             validators=[Required()])
+        submit = SubmitField('Submit')
+
+    for c in list(columns)[3:]: # ignore id, user and status fields
+        field = fields.get(str(c.type)[:3])
+        field = field(c.name.capitalize(), validators=[Required()] if str(c.type)[:3] != 'TEX' else None)
+        setattr(BaseForm, c.name, field)
+    return BaseForm(**kwargs)

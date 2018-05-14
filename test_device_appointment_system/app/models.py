@@ -55,7 +55,7 @@ class Device(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(64), unique=True)
     status = db.Column(db.String(32), server_default='Normal', index=True)
-    details  = db.Column(db.Text())
+    details = db.Column(db.Text())
     # secret_key = db.Column(db.String(64))
     # devices and users have a middle-table user_device
     # if get a user, then backref to devices to find all devices the user has
@@ -71,6 +71,14 @@ class Device(db.Model):
         self.secret_key = key
         db.session.add(self)
         db.session.commit()'''
+
+
+class DeviceType(db.Model):
+    __tablename__ = 'devicetypes'
+    id = db.Column(db.Integer, primary_key=True)
+    type = db.Column(db.String(64))
+    created_time = db.Column(db.DateTime(), default=datetime.utcnow())
+    edit_time = db.Column(db.DateTime(), onupdate=datetime.utcnow())
 
 
 class User(UserMixin, db.Model):

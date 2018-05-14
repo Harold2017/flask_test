@@ -1,14 +1,15 @@
 from . import form
 from .forms import StartForm, EndForm, ItemTable, GloveBoxStartForm, \
-        GloveBoxEndForm, GloveItemTable, StateTransferForm
+        GloveBoxEndForm, GloveItemTable, StateTransferForm, generate_form
 from flask import render_template
 from datetime import datetime, timedelta
 import os
 import json
-from ..models import Device, DeviceUsageLog, GloveBoxLog
+from ..models import Device, DeviceUsageLog, GloveBoxLog, DeviceType
 from .. import db
 from pytz import timezone
 from sqlalchemy import desc
+import sqlalchemy
 
 
 tzchina = timezone('Asia/Shanghai')
@@ -274,3 +275,82 @@ def glovebox_log(device_id):
         warn = 'No logs for this glovebox!'
         table = 0
     return render_template('log/device_log.html', warn=warn, table=table)
+
+
+@form.route('/new/<device_type>/<device_id>')
+def new_log(device_type, device_id):
+    device_type = str(device_type)
+    device_id = int(device_id)
+    device = Device.query.filter_by(id=device_id).first()
+    table = sqlalchemy.Table(device_type, sqlalchemy.MetaData(), autoload=True, autoload_with=db.engine)
+    form = generate_form(table.columns)
+
+    logs = BASEURL + "/form/" + device_type + '/' + str(device_id)
+    if device.status == 'Normal':
+        if device.device_inuse is False:
+            form = form
+            if form.validate_on_submit():
+                user = form.user.data
+                status = form.status.data
+                s = {0: None, 1: 'Normal', 2: 'Broken', 3: 'Fixing', 4: 'Terminated'}
+                status = s.get(status)
+                data = form.data
+                print(data)
+                '''try:
+                    device_usage_log = DeviceUsageLog(user_name=user, device_id=device_id, device_status=status, material=material, details=details)
+                    db.session.add(device_usage_log)
+                    if status != device.status:
+                        device.status = status
+                        device.state_transfer = True
+                    device.device_inuse = True
+                    db.session.commit()
+                    return render_template('log/success.html')
+                except:
+                    db.session.rollback()
+                    db.session.flush()'''
+            return render_template('log/log.html', device_id=device_id, form=form, logs=logs)
+        '''else:
+            form = EndForm()
+            if form.validate_on_submit():
+                status = form.status.data
+                s = {0: None, 1: 'Normal', 2: 'Broken', 3: 'Fixing', 4: 'Terminated'}
+                status = s.get(status)
+                remarks = form.remarks.data
+                product = form.product.data
+                end_time = datetime.utcnow()
+                try:
+                    device_usage_log = DeviceUsageLog.query.filter_by(device_id=device_id).order_by(desc(DeviceUsageLog.id)).first()
+                    device_usage_log.end_time = end_time
+                    device_usage_log.product = product
+                    device_usage_log.remarks = remarks
+                    if status != device.status:
+                        device.status = status
+                        device.state_transfer = True
+                    device.device_inuse = False
+                    db.session.commit()
+                    return render_template('log/success.html')
+                except:
+                    db.session.rollback()
+                    db.session.flush()
+            return render_template('log/log_logout.html', form=form, logs=logs)
+    elif device.status == 'Terminated':
+        return render_template('log/terminated.html')
+    else:
+        form = StateTransferForm()
+        status = device.status
+        if form.validate_on_submit():
+            status_s = form.status.data
+            s = {0: None, 1: 'Normal', 2: 'Broken', 3: 'Fixing', 4: 'Terminated'}
+            status_s = s.get(status_s)
+            if status_s == status:
+                return
+            else:
+                try:
+                    device.status = status_s
+                    device.state_transfer = True
+                    db.session.commit()
+                    return render_template('log/success.html')
+                except:
+                    db.session.rollback()
+                    db.session.flush()
+        return render_template('log/state_transfer.html', status=status, form=form, logs=logs)'''
