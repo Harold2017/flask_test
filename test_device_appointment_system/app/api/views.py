@@ -60,13 +60,15 @@ def add_data(token, device_id):
         and_(AppointmentEvents.user_id == user.id, AppointmentEvents.device_id == device_id,
              AppointmentEvents.start.between(start_date, end_date))
     ).all()
-    for event in events:
-        # print(event.start.date())
-        if start_date.time() == event.start.time() and start_date.time() <= event.start.time() <= event.end.time():
-            # print("Invalid")
-            return jsonify({"blocked": 3})
+    # for event in events:
+    # print(event.start.date())
+    # if start_date.time() == event.start.time() and start_date.time() <= event.start.time() <= event.end.time():
+    # print("Invalid")
+    if len(events) != 0:
+        return jsonify({"blocked": 3})
     # print(title, start_date, end_date)
-    event_new = AppointmentEvents(name=title, user_id=user.id, device_id=device_id, start=start_date, end=end_date, remark=remark)
+    event_new = AppointmentEvents(name=title, user_id=user.id, device_id=device_id, start=start_date, end=end_date,
+                                  remark=remark)
     db.session.add(event_new)
     db.session.commit()
     return jsonify({"blocked": 0, "id": event_new.id}), 200
@@ -86,7 +88,7 @@ def remove_data(token, device_id):
         return "No permission to access {0}".format(device_id), 401
     r = request.get_json(force=True)
     event_id = r['event_id']
-    event = AppointmentEvents.query.filter_by(id=event_id).first()
+    event = AppointmentEvents.query.filter_by(id=event_id).first_or_404()
     db.session.delete(event)
     db.session.commit()
     return jsonify({"id": event.id}), 200

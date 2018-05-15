@@ -58,10 +58,12 @@ class APITestCase(unittest.TestCase):
         db.session.commit()
 
         data_dict = {'title': 'test',
-                     'start': (datetime.datetime.utcnow() -
-                                                         datetime.timedelta(seconds=7200)).strftime('%Y-%m-%dT%H:%M:%S.%fZ'),
-                     'end': (datetime.datetime.utcnow() +
-                                                       datetime.timedelta(seconds=7200)).strftime('%Y-%m-%dT%H:%M:%S.%fZ'),
+                     'start': '2018-05-15T03:26:34.854018Z',
+                     # (datetime.datetime.utcnow() - datetime.timedelta(seconds=7200)).strftime(
+                     # '%Y-%m-%dT%H:%M:%S.%fZ'),
+                     'end': '2018-05-15T07:28:19.909165Z',
+                     # (datetime.datetime.utcnow() + datetime.timedelta(seconds=7200)).strftime(
+                     # '%Y-%m-%dT%H:%M:%S.%fZ'),
                      'remark': 'test'
                      }
         data = json.dumps(data_dict)
@@ -98,14 +100,15 @@ class APITestCase(unittest.TestCase):
 
         # user with auth but request data not fulfill
         data_fail_list = []
+        import copy  # use deepcopy here
         for key, value in data_dict.items():
-            tmp = data_dict
+            tmp = copy.deepcopy(data_dict)
             tmp[key] = ''
             data_fail_list.append(tmp)
         for data_fail in data_fail_list:
             response = self.client.post(
                 url_for('api.add_data', token=user.avatar_hash, device_id=device.id),
-                data=data_fail
+                data=json.dumps(data_fail)
             )
             json_response = json.loads(response.data.decode('utf-8'))
             self.assertTrue(json_response['blocked'], 2)
@@ -116,12 +119,9 @@ class APITestCase(unittest.TestCase):
             data=data
         )
         json_response = json.loads(response.data.decode('utf-8'))
-        self.assertTrue(json_response['blocked'] == 3)
+        self.assertTrue(json_response['blocked'], 3)
 
     def test_posts_remove_data(self):
-        # no data is required for this api
-        data = ''
-
         # add a event for testing
         user = self.data['user']
         device = self.data['device']
@@ -135,6 +135,9 @@ class APITestCase(unittest.TestCase):
         db.session.add(ae)
         db.session.add(user_no_auth)
         db.session.commit()
+
+        # this api requires event_id as data
+        data = json.dumps({'event_id': ae.id})
 
         # without token or without device_id
         response = self.client.post(
