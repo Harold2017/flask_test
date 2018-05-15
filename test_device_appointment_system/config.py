@@ -31,7 +31,8 @@ class DevelopmentConfig(Config):
 class TestingConfig(Config):
     TESTING = True
     RECAPTCHA_DISABLE = True
-    WTF_CSRF_METHODS = []  # This is the magic
+    WTF_CSRF_ENABLED = False  # disable CSRF for forms
+    # WTF_CSRF_METHODS = []  # This is the magic
     SQLALCHEMY_DATABASE_URI = os.environ.get('TEST_DATABASE_URL') or \
                               ('mysql://flask_test:123456@localhost/device_appointment_system')
 

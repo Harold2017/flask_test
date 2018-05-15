@@ -15,7 +15,9 @@ class ClientTestCase(unittest.TestCase):
         self.app_context = self.app.app_context()
         self.app_context.push()
         db.create_all()
-        self.client = self.app.test_client()
+        Role.insert_roles()
+        # activate use_cookies to let request remember context which enables user login/logout
+        self.client = self.app.test_client(use_cookies=True)
 
     def tearDown(self):
         db.session.remove()
@@ -35,26 +37,33 @@ class ClientTestCase(unittest.TestCase):
                                         'password': 'cat',
                                         'password2': 'cat'
                                     })
-        self.assertTrue(response.status_code == 200)
+        self.assertTrue(response.status_code == 302)
 
-        ''''# login with the new account
-        rv = self.client.get(url_for('auth.login'))
-        m = re.search(b'(<input id="csrf_token" name="csrf_token" type="hidden" value=")([-A-Za-z.0-9_]+)', rv.data)
-        print(m.group(2))
+        # login with the new account
+
+        # set WTF_CSRF_ENABLED = False to disable csrf or as follows
+        # rv = self.client.get(url_for('auth.login'))
+        # m = re.search(b'(<input id="csrf_token" name="csrf_token" type="hidden" value=")([-A-Za-z.0-9_]+)', rv.data)
+        # print(m.group(2))
         response = self.client.post(url_for('auth.login'),
                                     data={
                                         'email': 'register_test@test.com',
                                         'password': 'cat',
-                                        'csrf_token': m.group(2).decode("utf-8")
+                                        # 'csrf_token': m.group(2).decode("utf-8")
                                     },
                                     follow_redirects=True
                                     )
-        print(response.data)
+        # print(response.data)
+
+        # get potential alert message
         alert = re.search(b'(<div class="alert alert-warning">(.*?)</div>)', response.data)
-        print(alert)
+        # print(alert)
+        self.assertTrue(alert is None)
+
         self.assertTrue(re.search(b'Welcome', response.data))
 
         # log out
         response = self.client.get(url_for('auth.logout'),
                                    follow_redirects=True)
-        self.assertTrue(re.search(b'See you friend!'), response.data)'''
+        # print(response.data)
+        self.assertTrue(re.search(b'See you friend!', response.data))
