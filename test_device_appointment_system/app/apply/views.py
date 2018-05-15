@@ -86,7 +86,7 @@ def confirm(user_email):
         return render_template('403.html'), 403
     application = ApplicationLog.query.filter_by(user_email=user_email).order_by(desc(ApplicationLog.id)).first()
     if application.application_state == 'Apply':
-        applications = ApplicationLog.query.filter_by(user_email=user_email).filter(application_state='Apply').order_by(desc(ApplicationLog.id)).all()
+        applications = ApplicationLog.query.filter_by(user_email=user_email).filter_by(application_state='Apply').order_by(desc(ApplicationLog.id)).all()
     # print(type(application.devices))
     # devices = [int(d.strip()) for d in ast.literal_eval(application.devices)]
         for application in applications:
