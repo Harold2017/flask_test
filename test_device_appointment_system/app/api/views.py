@@ -60,11 +60,12 @@ def add_data(token, device_id):
         and_(AppointmentEvents.user_id == user.id, AppointmentEvents.device_id == device_id,
              AppointmentEvents.start.between(start_date, end_date))
     ).all()
-    for event in events:
+    '''for event in events:
         # print(event.start.date())
         if start_date.time() == event.start.time() and start_date.time() <= event.start.time() <= event.end.time():
-            # print("Invalid")
-            return jsonify({"blocked": 3})
+            # print("Invalid")'''
+    if len(events) != 0:
+        return jsonify({"blocked": 3})
     # print(title, start_date, end_date)
     event_new = AppointmentEvents(name=title, user_id=user.id, device_id=device_id, start=start_date, end=end_date, remark=remark)
     db.session.add(event_new)
