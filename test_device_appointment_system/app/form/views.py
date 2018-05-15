@@ -1,7 +1,7 @@
 from . import form
 from .forms import StartForm, EndForm, ItemTable, GloveBoxStartForm, \
         GloveBoxEndForm, GloveItemTable, StateTransferForm, generate_form
-from flask import render_template
+from flask import render_template, redirect, url_for, flash
 from datetime import datetime, timedelta
 import os
 import json
@@ -277,7 +277,7 @@ def glovebox_log(device_id):
     return render_template('log/device_log.html', warn=warn, table=table)
 
 
-@form.route('/new/<device_type>/<device_id>')
+@form.route('/new/<device_type>/<device_id>', methods=['GET', 'POST'])
 def new_log(device_type, device_id):
     device_type = str(device_type)
     device_id = int(device_id)
@@ -296,6 +296,8 @@ def new_log(device_type, device_id):
                 status = s.get(status)
                 data = form.data
                 print(data)
+                flash('Form uploaded successfully!')
+                return redirect(url_for('main.edit'))
                 '''try:
                     device_usage_log = DeviceUsageLog(user_name=user, device_id=device_id, device_status=status, material=material, details=details)
                     db.session.add(device_usage_log)

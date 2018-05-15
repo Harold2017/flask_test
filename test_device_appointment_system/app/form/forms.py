@@ -4,12 +4,13 @@ from wtforms import StringField, TextAreaField, SelectField, \
 from wtforms.fields.html5 import DateTimeField
 from wtforms.validators import Required, Length
 from flask_table import Table, Col
+from datetime import datetime
 
-'''from pytz import timezone
+from pytz import timezone
 
 
 tzchina = timezone('Asia/Shanghai')
-utc = timezone('UTC')'''
+utc = timezone('UTC')
 
 
 class StartForm(FlaskForm):
@@ -140,10 +141,20 @@ def generate_form(columns, **kwargs):
                              choices=[(0, 'None'), (1, 'Normal'), (2, 'Broken'), (3, 'Fixing'), (4, 'Terminated')],
                              default=0,
                              validators=[Required()])
+
+    for c in list(columns)[3:]:  # ignore id, user and status fields
+        field = fields.get(str(c.type)[:3])
+        # if isinstance(field, DateTimeField):
+        if str(c.type)[:3] == 'TIM':
+            field = field(c.name.capitalize(), format="%Y-%m-%d %H:%M", default=datetime.utcnow().replace(tzinfo=utc).astimezone(tzchina))
+        else:
+            field = field(c.name.capitalize(), validators=[Required()] if str(c.type)[:3] != 'TEX' else None)
+        setattr(BaseForm, c.name, field)
+
+    class Form(BaseForm):
         submit = SubmitField('Submit')
 
-    for c in list(columns)[3:]: # ignore id, user and status fields
-        field = fields.get(str(c.type)[:3])
-        field = field(c.name.capitalize(), validators=[Required()] if str(c.type)[:3] != 'TEX' else None)
-        setattr(BaseForm, c.name, field)
-    return BaseForm(**kwargs)
+        def __init__(self, *args, **kwargs):
+            super(Form, self).__init__(*args, **kwargs)
+
+    return Form(**kwargs)
