@@ -21,9 +21,13 @@ class EditDeviceForm(FlaskForm):
     name = StringField('Device name', validators=[Required(), Length(1, 64)])
     users = TextAreaField('User names(separated by comma)')
     status = SelectField('Device status', choices=[('Normal', 'Normal'), ('Broken', 'Broken'), ('Fixing', 'Fixing'), ('Terminated', 'Terminated')])
-    device_type = SelectField('Device type', coerce=int, choices=[(0, 'Common Device'), (1, 'GloveBox')])
+    device_type = SelectField('Device type')
     details = TextAreaField('Details')
     submit = SubmitField('Submit')
+
+    def __init__(self, device_types, *args, **kwargs):
+        super(EditDeviceForm, self).__init__(*args, **kwargs)
+        self.device_type.choices = [(device["type"], device["type"]) for device in device_types]
 
 
 class ItemTable(Table):

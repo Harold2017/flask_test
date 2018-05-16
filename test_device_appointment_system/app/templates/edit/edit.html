@@ -59,8 +59,15 @@
 </table>
 </div>
 
-<div class="container">
-    <a href="{{ url_for('main.edit_device') }}" class="btn btn-default">Edit Device</a>
-    <a href="{{ url_for('main.edit_user_device') }}" class="btn btn-default">Edit User Device</a>
+<div class="row">
+    <div class="col-sm">
+        <a href="{{ url_for('main.edit_device_type') }}" class="btn btn-default">Add New Type Device</a>
+    </div>
+    <div class="col-sm">
+        <a href="{{ url_for('main.edit_device') }}" class="btn btn-default">Edit Device</a>
+    </div>
+    <div class="col-sm">
+        <a href="{{ url_for('main.edit_user_device') }}" class="btn btn-default">Edit User Device</a>
+    </div>
 </div>
 {% endblock %}

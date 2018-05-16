@@ -1,0 +1,86 @@
+{% extends "base.html" %}
+{% import "bootstrap/wtf.html" as wtf %}
+
+{% block title %}NAMI IoT - Edit Device Type{% endblock %}
+
+{% block page_content %}
+<div class="page-header">
+    <h1>Edit Device Type</h1>
+    <label for="device_name">Device Name</label>
+    <input type="text" id="device_name" placeholder="device name"/>
+</div>
+<div class="col-md-4">
+    <form action="" method="POST">
+        <table class="table table-borderless">
+            <thread>
+                <tr>
+                    <th style="text-align:center">Attribute Name</th>
+                    <th style="text-align:center">Attribute Type</th>
+                </tr>
+            </thread>
+            <tbody id="model_fields">
+                <tr>
+                    <td style="text-align:center">
+                        <fieldset class="form-group">
+                            <input type="text" placeholder="name" id="field_name0"/>
+                        </fieldset>
+                    </td>
+                    <td style="text-align:center">
+                        <fieldset class="form-group">
+                            <select id="select_data_type0">
+                                <option value="INT">Integer</option>
+                                <option value="FLOAT">Float</option>
+                                <option value="VARCHAR(64)">String(64)</option>
+                                <option value="TEXT">Text</option>
+                                <option value="TIMESTAMP">Timestamp</option>
+                                <option value="BOOLEAN">Boolean</option>
+                            </select>
+                        </fieldset>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </form>
+    <br/>
+    <input type="button" id="more_fields" onclick="add_fields()" value="Add More"/>
+    <input type="submit" onclick="submit_fields()" value="Submit">
+    <script>
+        var count = 0;
+        function add_fields() {
+            count ++;
+            var fields_to_add = document.getElementById('model_fields');
+            var tr_container = document.createElement("tr");
+            tr_container.innerHTML =
+            '<td style="text-align:center"><fieldset class="form-group"><input type="text" placeholder="name" id="field_name'+count+'"/></fieldset></td><td style="text-align:center"><fieldset class="form-group"><select id="select_data_type'+count+'"><option value="INT">Integer</option><option value="FLOAT">Float</option><option value="VARCHAR(64)">String(64)</option><option value="TEXT">Text</option><option value="TIMESTAMP">Timestamp</option><option value="BOOLEAN">Boolean</option></select></fieldset></td>';
+            fields_to_add.appendChild(tr_container);
+        };
+        var submit_array = [];
+        function submit_fields() {
+            var device_name = document.getElementById('device_name');
+            submit_array.push({device_name: device_name.value});
+            for (var index=0; index<count+1; index++) {
+                var field = document.getElementById('field_name'+index);
+                var selected = document.getElementById('select_data_type'+index);
+                submit_array.push({
+                    field_name: field.value,
+                    field_type: selected.options[selected.selectedIndex].value
+                })
+            };
+            $.ajax({
+                url: '/edit_device_type',
+                data: JSON.stringify(submit_array),
+                type: 'POST',
+                success: function(data) {
+                    alert('New Type Device Added!');
+                    console.log(data)
+                    },
+                error: function(error) {
+                    alert(error);
+                }
+            });
+        };
+        //console.log(submit_array);
+    </script>
+</div>
+
+{% endblock %}
