@@ -259,3 +259,12 @@ class ApplicationLog(db.Model):
     approved_devices = db.Column(db.String(128))
     application_state = db.Column(db.String(32), default='Apply')
 
+
+class SlowQuery(db.Model):
+    __tablename__ = 'slowqueries'
+    id = db.Column(db.Integer, primary_key=True)
+    slow_query = db.Column(db.Text())
+    duration = db.Column(db.String(128))
+    parameters = db.Column(db.String(256))
+    context = db.Column(db.Text())
+    execute_time = db.Column(db.DateTime(), default=datetime.utcnow)

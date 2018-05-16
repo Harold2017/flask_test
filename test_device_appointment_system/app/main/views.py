@@ -1,11 +1,13 @@
-from flask import request, render_template, jsonify, flash
+from flask import request, render_template, jsonify, flash, current_app
 from . import main
 from .. import db
-from ..models import User, Device, Permission, user_device, AnonymousUser, DeviceUsageLog, GloveBoxLog, DeviceType
+from ..models import User, Device, Permission, user_device, AnonymousUser, \
+    DeviceUsageLog, GloveBoxLog, DeviceType, SlowQuery
 from flask_login import login_required, current_user
 from ..decorators import admin_required, permission_required
 from .forms import EditUserForm, Item, ItemTable, EditDeviceForm
 from ..QRcode.QRcode import qr_generator
+from flask_sqlalchemy import get_debug_queries
 
 
 BASEURL = 'http://namihk.com'
@@ -35,6 +37,26 @@ def find_device_types():
     for dt in device_types:
         dt_list.append({"type": dt.type})
     return dt_list
+
+
+@main.after_app_request
+def after_request(response):
+    for query in get_debug_queries():
+        if query.duration >= current_app.config["SLOW_QUERY_TIME"]:
+            current_app.logger.warning('Slow query: %s\nParameters: %s\nDuration: %fs\nContext: %s\n' %
+                                       (query.statement, query.parameters, query.duration, query.context))
+            slowquery = SlowQuery(slowquery=query.statement,
+                                  duration=query.duration,
+                                  parameters=query.parameters,
+                                  context=query.context)
+            try:
+                db.session.add(slowquery)
+                db.commit()
+            except Exception as e:
+                db.session.rollback()
+                db.session.flush()
+                current_app.logger.warning('Cannot record this slow query into db!')
+    return response
 
 
 @main.route('/', methods=['GET', 'POST'])

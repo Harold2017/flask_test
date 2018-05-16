@@ -16,6 +16,8 @@ class Config:
     MAIL_PASSWORD = os.environ.get('MAIL_PASSWORD')
     MAIL_SUBJECT_PREFIX = 'NAMIHK'
     MAIL_SENDER = 'NAMIHK'
+    SLOW_QUERY_TIME = 0.3
+    SQLALCHEMY_RECORD_QUERIES = True
 
     @staticmethod
     def init_app(app):

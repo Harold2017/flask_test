@@ -98,6 +98,20 @@ def test():
     unittest.TextTestRunner(verbosity=2).run(tests)
 
 
+@manager.command
+def profile(length=25, profile_dir=None):
+    """
+    Start the application under the code profiler.
+    :param length: number of displaying functions in report
+    :param profile_dir: folder to save requests' analysis data
+    :return: None
+    """
+    from werkzeug.contrib.profiler import ProfilerMiddleware
+    app.wsgi_app = ProfilerMiddleware(app.wsgi_app, restrictions=[length],
+                                      profile_dir=profile_dir)
+    app.run()
+
+
 scheduler.add_job(func=check_log, id='check_log', trigger='interval', hours=1)
 
 scheduler.add_job(func=check_device_state, id='check_device_state', trigger='interval', hours=1)
