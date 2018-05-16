@@ -112,6 +112,19 @@ def profile(length=25, profile_dir=None):
     app.run()
 
 
+@manager.command
+def deploy():
+    """Run deployment tasks."""
+    from flask_migrate import upgrade
+    from app.models import Role
+
+    # upgrade database to newest version
+    upgrade()
+
+    # insert roles into db
+    Role.insert_roles()
+
+
 scheduler.add_job(func=check_log, id='check_log', trigger='interval', hours=1)
 
 scheduler.add_job(func=check_device_state, id='check_device_state', trigger='interval', hours=1)
