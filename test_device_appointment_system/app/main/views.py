@@ -1,4 +1,4 @@
-from flask import request, render_template, jsonify, flash, current_app
+from flask import request, render_template, jsonify, flash, current_app, redirect, url_for
 from . import main
 from .. import db
 from ..models import User, Device, Permission, user_device, AnonymousUser, \
@@ -192,7 +192,10 @@ def edit_device_type():
             r = request.get_json(force=True)
             # print(r)
             device_name = r.pop(0)['device_name']
-            field_list = ['id INT NOT NULL AUTO_INCREMENT PRIMARY KEY', 'device_id INT', 'device_status VARCHAR(32)']
+            field_list = ['id INT NOT NULL AUTO_INCREMENT PRIMARY KEY', 'device_id INT',
+                          "device_status VARCHAR(32) DEFAULT 'Normal'",
+                          'username VARCHAR(64)', 'start_time DATETIME DEFAULT CURRENT_TIMESTAMP',
+                          'end_time DATETIME ON UPDATE CURRENT_TIMESTAMP']
             for field in r:
                 field_list.append(field['field_name']+' '+field['field_type'])
             # print(field_list)
@@ -203,7 +206,8 @@ def edit_device_type():
             db.session.add(device_type)
             db.session.commit()
             # print(result)
-            return 'succeed!', 200
+            flash('New Type Device Added!')
+            return redirect(url_for('main.edit'))
         except Exception as e:
             # print(e)
             db.session.rollback()

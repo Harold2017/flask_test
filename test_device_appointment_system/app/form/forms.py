@@ -8,7 +8,6 @@ from datetime import datetime
 
 from pytz import timezone
 
-
 tzchina = timezone('Asia/Shanghai')
 utc = timezone('UTC')
 
@@ -128,25 +127,27 @@ fields = {'INT': IntegerField,
           'VAR': StringField,
           'TEX': TextAreaField,
           'TIN': BooleanField,
-          'TIM': DateTimeField,
+          'DAT': DateTimeField,
           'FLO': FloatField
           }
 
 
 def generate_form(columns, **kwargs):
-
     class BaseForm(FlaskForm):
-        user = StringField('User name', validators=[Required(), Length(1, 64)])
-        status = SelectField('Device status', coerce=int,
-                             choices=[(0, 'None'), (1, 'Normal'), (2, 'Broken'), (3, 'Fixing'), (4, 'Terminated')],
-                             default=0,
-                             validators=[Required()])
+        username = StringField('User name', validators=[Required(), Length(1, 64)])
+        device_status = SelectField('Device status', coerce=int,
+                                    choices=[(0, 'None'), (1, 'Normal'), (2, 'Broken'), (3, 'Fixing'),
+                                             (4, 'Terminated')],
+                                    default=0,
+                                    validators=[Required()])
 
     for c in list(columns)[3:]:  # ignore id, user and status fields
         field = fields.get(str(c.type)[:3])
         # if isinstance(field, DateTimeField):
-        if str(c.type)[:3] == 'TIM':
-            field = field(c.name.capitalize(), format="%Y-%m-%d %H:%M", default=datetime.utcnow().replace(tzinfo=utc).astimezone(tzchina))
+        if str(c.type)[:3] == 'DAT' or str(c.name) == 'username':
+            # field = field(c.name.capitalize(), format="%Y-%m-%d %H:%M", default=datetime.utcnow().replace(
+            # tzinfo=utc).astimezone(tzchina))
+            continue
         else:
             field = field(c.name.capitalize(), validators=[Required()] if str(c.type)[:3] != 'TEX' else None)
         setattr(BaseForm, c.name, field)

@@ -8,8 +8,8 @@ import json
 from ..models import Device, DeviceUsageLog, GloveBoxLog, DeviceType
 from .. import db
 from pytz import timezone
-from sqlalchemy import desc
-import sqlalchemy
+from sqlalchemy import desc, Table, MetaData
+from sqlalchemy.ext.automap import automap_base
 
 
 tzchina = timezone('Asia/Shanghai')
@@ -282,37 +282,39 @@ def new_log(device_type, device_id):
     device_type = str(device_type)
     device_id = int(device_id)
     device = Device.query.filter_by(id=device_id).first()
-    table = sqlalchemy.Table(device_type, sqlalchemy.MetaData(), autoload=True, autoload_with=db.engine)
-    form = generate_form(table.columns)
+    table = Table(device_type, MetaData(), autoload=True, autoload_with=db.engine)  # get table description
+    form = generate_form(table.columns)  # pass table's columns to generate corresponding forms
+
+    Base = automap_base()
+    Base.prepare(db.engine, reflect=True)  # use automap of sqlalchemy to get table's corresponding class model
+    table = getattr(Base.classes, device_type, None)  # getattr to access attribute like Base.classes.device_type
 
     logs = BASEURL + "/form/" + device_type + '/' + str(device_id)
     if device.status == 'Normal':
         if device.device_inuse is False:
             form = form
             if form.validate_on_submit():
-                user = form.user.data
-                status = form.status.data
                 s = {0: None, 1: 'Normal', 2: 'Broken', 3: 'Fixing', 4: 'Terminated'}
-                status = s.get(status)
-                data = form.data
-                print(data)
-                flash('Form uploaded successfully!')
-                return redirect(url_for('main.edit'))
-                '''try:
-                    device_usage_log = DeviceUsageLog(user_name=user, device_id=device_id, device_status=status, material=material, details=details)
-                    db.session.add(device_usage_log)
-                    if status != device.status:
-                        device.status = status
+                data = {key: form.data[key] for key in form.data.keys() if key != 'submit' and key != 'csrf_token'}
+                data['device_status'] = s.get(data['device_status'])
+                data['device_id'] = device_id
+                # print(data)
+                try:
+                    table_log = table(**data)  # passing kwargs to table by unpacking dict
+                    db.session.add(table_log)
+                    if data['device_status'] != device.status:
+                        device.status = data['device_status']
                         device.state_transfer = True
                     device.device_inuse = True
                     db.session.commit()
                     return render_template('log/success.html')
-                except:
+                except Exception as e:
                     db.session.rollback()
-                    db.session.flush()'''
+                    db.session.flush()
+                    print(e)
             return render_template('log/log.html', device_id=device_id, form=form, logs=logs)
         '''else:
-            form = EndForm()
+            form = form
             if form.validate_on_submit():
                 status = form.status.data
                 s = {0: None, 1: 'Normal', 2: 'Broken', 3: 'Fixing', 4: 'Terminated'}

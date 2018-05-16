@@ -32,7 +32,7 @@
                                 <option value="FLOAT">Float</option>
                                 <option value="VARCHAR(64)">String(64)</option>
                                 <option value="TEXT">Text</option>
-                                <option value="TIMESTAMP">Timestamp</option>
+                                <option value="DATETIME">Datetime</option>
                                 <option value="BOOLEAN">Boolean</option>
                             </select>
                         </fieldset>
@@ -51,7 +51,7 @@
             var fields_to_add = document.getElementById('model_fields');
             var tr_container = document.createElement("tr");
             tr_container.innerHTML =
-            '<td style="text-align:center"><fieldset class="form-group"><input type="text" placeholder="name" id="field_name'+count+'"/></fieldset></td><td style="text-align:center"><fieldset class="form-group"><select id="select_data_type'+count+'"><option value="INT">Integer</option><option value="FLOAT">Float</option><option value="VARCHAR(64)">String(64)</option><option value="TEXT">Text</option><option value="TIMESTAMP">Timestamp</option><option value="BOOLEAN">Boolean</option></select></fieldset></td>';
+            '<td style="text-align:center"><fieldset class="form-group"><input type="text" placeholder="name" id="field_name'+count+'"/></fieldset></td><td style="text-align:center"><fieldset class="form-group"><select id="select_data_type'+count+'"><option value="INT">Integer</option><option value="FLOAT">Float</option><option value="VARCHAR(64)">String(64)</option><option value="TEXT">Text</option><option value="DATETIME">Datetime</option><option value="BOOLEAN">Boolean</option></select></fieldset></td>';
             fields_to_add.appendChild(tr_container);
         };
         var submit_array = [];
@@ -67,7 +67,7 @@
                 })
             };
             $.ajax({
-                url: '/edit_device_type',
+                url: '{{ url_for('main.edit_device_type') }}',
                 data: JSON.stringify(submit_array),
                 type: 'POST',
                 success: function(data) {
