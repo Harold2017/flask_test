@@ -121,7 +121,7 @@ def main():
                             delta = log.end_time - log.start_time
                             t += delta
                     else:
-                        t = 0
+                        t = timedelta(hours=0)
                 total[device_name] = [round(t / timedelta(hours=8 * 5 * days / 7) * 100, 2),
                                       round(t / timedelta(hours=1), 2)]
             attr = []
