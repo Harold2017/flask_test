@@ -34,8 +34,10 @@ def main():
             cnt += 1
             if DeviceUsageLog.query.filter_by(device_id=d.id).first():
                 log = DeviceUsageLog.query.filter_by(device_id=d.id).order_by(desc(DeviceUsageLog.id)).first()
+                username = log.user_name
             elif GloveBoxLog.query.filter_by(device_id=d.id).first():
                 log = GloveBoxLog.query.filter_by(device_id=d.id).order_by(desc(GloveBoxLog.id)).first()
+                username = log.user_name
             else:
                 log = None
                 for devicetype in devicetypes:
@@ -46,8 +48,9 @@ def main():
                         break
                     else:
                         continue
+                username = log.username
             d_list.append({
-                "user_name": log.username,
+                "user_name": username,
                 "device_id": log.device_id,
                 "device_name": d.name,
                 "device_status": log.device_status,
