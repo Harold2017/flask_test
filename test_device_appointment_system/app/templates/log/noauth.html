@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+{% import "bootstrap/wtf.html" as wtf %}
+
+{% block title %}Log{% endblock %}
+
+{% block page_content %}
+<div class="page-header">
+    <h2>Can not log out!</h2>
+</div>
+<div>
+	<p class="bg.warning">You are not using the same username as login person!</p>
+</div>
+<div class="container">
+	<p>Booking this device by this <a href="{{ url_for('appointment.calendar', selected_device=device_id) }}">link</a>.</p>
+	<p>See the usage <a href={{ logs }} target="_blank">Log</a> for your reference.</p>
+</div>
+{% endblock %}
+
+{% block scripts %}
+{{ super() }}
+{% endblock %}
