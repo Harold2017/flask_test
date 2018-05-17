@@ -8,9 +8,11 @@ from ..decorators import admin_required, permission_required
 from .forms import EditUserForm, Item, ItemTable, EditDeviceForm
 from ..QRcode.QRcode import qr_generator
 from flask_sqlalchemy import get_debug_queries
+from sqlalchemy.ext.automap import automap_base
 
 
 BASEURL = 'http://namihk.com'
+# BASEURL = 'http://localhost:5000'
 
 
 def find_users(device):
@@ -88,6 +90,10 @@ def edit():
     else:
         table = None'''
     device_list = []
+    devicetypes = DeviceType.query.all()
+    Base = automap_base()
+    Base.prepare(db.engine,
+                 reflect=True)  # use automap of sqlalchemy to get table's corresponding class model
     for device in devices:
         img_path = "../static/QRcode/Device" + str(device.id) + '.png'
         if DeviceUsageLog.query.filter_by(device_id=device.id).first():
@@ -95,7 +101,17 @@ def edit():
         elif GloveBoxLog.query.filter_by(device_id=device.id).first():
             logs = BASEURL + "/form/glovebox/glovebox_log/" + str(device.id)
         else:
-            logs = None
+            for devicetype in devicetypes:
+                table = getattr(Base.classes, devicetype.type,
+                                None)  # getattr to access attribute like Base.classes.device_type
+                query = db.session.query(table).filter_by(device_id=device.id).first()
+                if query:
+                    device_type = devicetype.type
+                    logs = BASEURL + "/form/new/" + device_type + '/log/' + str(device.id)
+                    break
+                else:
+                    continue
+
         device_list.append({"id": device.id,
                             "name": device.name,
                             "status": device.status,
