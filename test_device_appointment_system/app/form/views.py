@@ -1,22 +1,24 @@
 from . import form
 from .forms import StartForm, EndForm, ItemTable, GloveBoxStartForm, \
-        GloveBoxEndForm, GloveItemTable, StateTransferForm, generate_form
-from flask import render_template, redirect, url_for, flash
+    GloveBoxEndForm, GloveItemTable, StateTransferForm, generate_form
+from flask import render_template
 from datetime import datetime, timedelta
 import os
-import json
-from ..models import Device, DeviceUsageLog, GloveBoxLog, DeviceType
+from ..models import Device, DeviceUsageLog, GloveBoxLog
 from .. import db
 from pytz import timezone
-from sqlalchemy import desc, Table, MetaData
+from sqlalchemy import desc, Table, MetaData, inspect
 from sqlalchemy.ext.automap import automap_base
+from flask_table import create_table, Col
+from collections import OrderedDict
 
 
 tzchina = timezone('Asia/Shanghai')
 utc = timezone('UTC')
 
 log_folder = os.path.abspath('app') + '\\form\\log\\'
-BASEURL = 'http://namihk.com'
+# BASEURL = 'http://namihk.com'
+BASEURL = 'http://localhost:5000'
 
 
 @form.route('/<device_id>', methods=['GET', 'POST'])
@@ -36,7 +38,8 @@ def log(device_id):
                 start_time = datetime.utcnow()
                 material = form.material.data
                 try:
-                    device_usage_log = DeviceUsageLog(user_name=user, device_id=device_id, device_status=status, material=material, details=details)
+                    device_usage_log = DeviceUsageLog(user_name=user, device_id=device_id, device_status=status,
+                                                      material=material, details=details)
                     db.session.add(device_usage_log)
                     if status != device.status:
                         device.status = status
@@ -58,7 +61,8 @@ def log(device_id):
                 product = form.product.data
                 end_time = datetime.utcnow()
                 try:
-                    device_usage_log = DeviceUsageLog.query.filter_by(device_id=device_id).order_by(desc(DeviceUsageLog.id)).first()
+                    device_usage_log = DeviceUsageLog.query.filter_by(device_id=device_id).order_by(
+                        desc(DeviceUsageLog.id)).first()
                     device_usage_log.end_time = end_time
                     device_usage_log.product = product
                     device_usage_log.remarks = remarks
@@ -94,6 +98,7 @@ def log(device_id):
                     db.session.flush()
         return render_template('log/state_transfer.html', status=status, form=form, logs=logs)
 
+
 '''def log(device_id):
     form = LogForm()
     if form.validate_on_submit():
@@ -119,11 +124,15 @@ def log(device_id):
 def device_log(device_id):
     device_id = int(device_id)
     if DeviceUsageLog.query.filter_by(device_id=device_id).first():
-        d_logs = DeviceUsageLog.query.filter_by(device_id=device_id).filter(DeviceUsageLog.start_time <= datetime.utcnow()).filter(DeviceUsageLog.start_time >= (datetime.utcnow().date() - timedelta(days=2))).order_by(desc(DeviceUsageLog.id)).all()
+        d_logs = DeviceUsageLog.query.filter_by(device_id=device_id).filter(
+            DeviceUsageLog.start_time <= datetime.utcnow()).filter(
+            DeviceUsageLog.start_time >= (datetime.utcnow().date() - timedelta(days=2))).order_by(
+            desc(DeviceUsageLog.id)).all()
         if len(d_logs) >= 5:
             d_logs = d_logs[:5]
         else:
-            d_logs = DeviceUsageLog.query.filter_by(device_id=device_id).order_by(desc(DeviceUsageLog.id)).limit(5).all()
+            d_logs = DeviceUsageLog.query.filter_by(device_id=device_id).order_by(desc(DeviceUsageLog.id)).limit(
+                5).all()
         device_name = Device.query.filter_by(id=device_id).first().name
         ls = []
         for d_log in d_logs:
@@ -135,10 +144,11 @@ def device_log(device_id):
                  'material': d_log.material,
                  'details': d_log.details,
 
-                 'end_time': d_log.end_time.replace(tzinfo=utc).astimezone(tzchina).strftime('%Y/%m/%d-%H:%M:%S') if d_log.end_time is not None else 'Inuse',
+                 'end_time': d_log.end_time.replace(tzinfo=utc).astimezone(tzchina).strftime(
+                     '%Y/%m/%d-%H:%M:%S') if d_log.end_time is not None else 'Inuse',
                  'product': d_log.product,
                  'remarks': d_log.remarks
-                }
+                 }
             ls.append(d)
         table = ItemTable(ls)
         warn = 0
@@ -171,7 +181,9 @@ def glovebox(device_id):
                 material = form.material.data
                 details = form.details.data
                 try:
-                    gloveboxlog = GloveBoxLog(user_name=user, device_id=device_id, device_status=status, h2o_before=h2o_before, o2_before=o2_before, ar_before=ar_before, pressure_before=pressure_before, material=material, details=details)
+                    gloveboxlog = GloveBoxLog(user_name=user, device_id=device_id, device_status=status,
+                                              h2o_before=h2o_before, o2_before=o2_before, ar_before=ar_before,
+                                              pressure_before=pressure_before, material=material, details=details)
                     db.session.add(gloveboxlog)
                     if status != device.status:
                         device.status = status
@@ -196,7 +208,8 @@ def glovebox(device_id):
                 product = form.product.data
                 remarks = form.remarks.data
                 try:
-                    gloveboxlog = GloveBoxLog.query.filter_by(device_id=device_id).order_by(desc(GloveBoxLog.id)).first()
+                    gloveboxlog = GloveBoxLog.query.filter_by(device_id=device_id).order_by(
+                        desc(GloveBoxLog.id)).first()
                     gloveboxlog.h2o_after = h2o_after
                     gloveboxlog.o2_after = o2_after
                     gloveboxlog.ar_after = ar_after
@@ -240,7 +253,10 @@ def glovebox(device_id):
 def glovebox_log(device_id):
     device_id = int(device_id)
     if GloveBoxLog.query.filter_by(device_id=device_id).first():
-        g_logs = GloveBoxLog.query.filter_by(device_id=device_id).filter(GloveBoxLog.start_time <= datetime.utcnow()).filter(GloveBoxLog.start_time >= (datetime.utcnow().date() - timedelta(days=2))).order_by(desc(GloveBoxLog.id)).all()
+        g_logs = GloveBoxLog.query.filter_by(device_id=device_id).filter(
+            GloveBoxLog.start_time <= datetime.utcnow()).filter(
+            GloveBoxLog.start_time >= (datetime.utcnow().date() - timedelta(days=2))).order_by(
+            desc(GloveBoxLog.id)).all()
         if len(g_logs) >= 5:
             g_logs = g_logs[:5]
         else:
@@ -260,14 +276,15 @@ def glovebox_log(device_id):
                  'material': g_log.material,
                  'details': g_log.details,
 
-                 'end_time': g_log.end_time.replace(tzinfo=utc).astimezone(tzchina).strftime('%Y/%m/%d-%H:%M:%S') if g_log.end_time is not None else 'Inuse',
+                 'end_time': g_log.end_time.replace(tzinfo=utc).astimezone(tzchina).strftime(
+                     '%Y/%m/%d-%H:%M:%S') if g_log.end_time is not None else 'Inuse',
                  'h2o_after': g_log.h2o_after,
                  'o2_after': g_log.o2_after,
                  'ar_after': g_log.ar_after,
                  'pressure_after': g_log.pressure_after,
                  'product': g_log.product,
                  'remarks': g_log.remarks
-            }
+                 }
             ls.append(g)
         table = GloveItemTable(ls)
         warn = 0
@@ -278,26 +295,28 @@ def glovebox_log(device_id):
 
 
 @form.route('/new/<device_type>/<device_id>', methods=['GET', 'POST'])
-def new_log(device_type, device_id):
+def new_log_form(device_type, device_id):
     device_type = str(device_type)
     device_id = int(device_id)
     device = Device.query.filter_by(id=device_id).first()
-    table = Table(device_type, MetaData(), autoload=True, autoload_with=db.engine)  # get table description
-    form = generate_form(table.columns)  # pass table's columns to generate corresponding forms
+    table_description = Table(device_type, MetaData(), autoload=True, autoload_with=db.engine)  # get table description
 
     Base = automap_base()
     Base.prepare(db.engine, reflect=True)  # use automap of sqlalchemy to get table's corresponding class model
     table = getattr(Base.classes, device_type, None)  # getattr to access attribute like Base.classes.device_type
 
-    logs = BASEURL + "/form/" + device_type + '/' + str(device_id)
+    logs = BASEURL + "/form/new/" + device_type + '/log/' + str(device_id)
     if device.status == 'Normal':
         if device.device_inuse is False:
-            form = form
+            form = generate_form('login', table_description.columns)
+            # pass form type and table's columns to generate
+            # corresponding forms
             if form.validate_on_submit():
                 s = {0: None, 1: 'Normal', 2: 'Broken', 3: 'Fixing', 4: 'Terminated'}
                 data = {key: form.data[key] for key in form.data.keys() if key != 'submit' and key != 'csrf_token'}
                 data['device_status'] = s.get(data['device_status'])
                 data['device_id'] = device_id
+                data['start_time'] = datetime.utcnow()
                 # print(data)
                 try:
                     table_log = table(**data)  # passing kwargs to table by unpacking dict
@@ -313,29 +332,30 @@ def new_log(device_type, device_id):
                     db.session.flush()
                     print(e)
             return render_template('log/log.html', device_id=device_id, form=form, logs=logs)
-        '''else:
-            form = form
+        else:
+            form = generate_form('logout', table_description.columns)
             if form.validate_on_submit():
-                status = form.status.data
+                table_log = db.session.query(table).filter_by(device_id=device_id). \
+                    order_by(desc(table.id)).first_or_404()
+                if form.email.data != table_log.email:
+                    return render_template('log/noauth.html')
                 s = {0: None, 1: 'Normal', 2: 'Broken', 3: 'Fixing', 4: 'Terminated'}
-                status = s.get(status)
-                remarks = form.remarks.data
-                product = form.product.data
-                end_time = datetime.utcnow()
+                data = {key: form.data[key] for key in form.data.keys() if key != 'submit' and key != 'csrf_token'}
+                data['device_status'] = s.get(data['device_status'])
+                data['end_time'] = datetime.utcnow()
                 try:
-                    device_usage_log = DeviceUsageLog.query.filter_by(device_id=device_id).order_by(desc(DeviceUsageLog.id)).first()
-                    device_usage_log.end_time = end_time
-                    device_usage_log.product = product
-                    device_usage_log.remarks = remarks
-                    if status != device.status:
-                        device.status = status
+                    for key, value in data.items():
+                        setattr(table_log, key, value)  # set table_log.attr to value
+                    if data['device_status'] != device.status:
+                        device.status = data['device_status']
                         device.state_transfer = True
                     device.device_inuse = False
                     db.session.commit()
                     return render_template('log/success.html')
-                except:
+                except Exception as e:
                     db.session.rollback()
                     db.session.flush()
+                    print(e)
             return render_template('log/log_logout.html', form=form, logs=logs)
     elif device.status == 'Terminated':
         return render_template('log/terminated.html')
@@ -354,7 +374,82 @@ def new_log(device_type, device_id):
                     device.state_transfer = True
                     db.session.commit()
                     return render_template('log/success.html')
-                except:
+                except Exception as e:
                     db.session.rollback()
                     db.session.flush()
-        return render_template('log/state_transfer.html', status=status, form=form, logs=logs)'''
+                    print(e)
+        return render_template('log/state_transfer.html', status=status, form=form, logs=logs)
+
+
+def row2dict(row):
+    dict = {column.key: getattr(row, column.key) for column in inspect(row).mapper.column_attrs}
+    try:
+        del dict["email"]
+        del dict["id"]
+    except KeyError as e:
+        print("No such key: '%s'" % e)
+    finally:
+        return dict
+
+
+def row2ordereddict(row):
+    result = OrderedDict()
+    for column in inspect(row).mapper.column_attrs:
+        result[column.key] = getattr(row, column.key)
+    try:
+        del result["email"]
+        del result["id"]
+    except KeyError as e:
+        print("No such key: '%s'" % e)
+    finally:
+        return result
+
+
+@form.route('/new/<device_type>/log/<device_id>')
+def new_log(device_type, device_id):
+    device_type = str(device_type)
+    device_id = int(device_id)
+
+    Base = automap_base()
+    Base.prepare(db.engine, reflect=True)  # use automap of sqlalchemy to get table's corresponding class model
+    table = getattr(Base.classes, device_type, None)  # getattr to access attribute like Base.classes.device_type
+
+    if db.session.query(table).filter_by(device_id=device_id).first():
+        # search logs within two days first
+        table_logs = db.session.query(table).filter_by(device_id=device_id). \
+            filter(table.start_time <= datetime.utcnow()). \
+            filter(table.start_time >= (datetime.utcnow() - timedelta(days=2))). \
+            order_by(desc(table.id)).all()
+        # display the latest 5 records
+        if len(table_logs) >= 5:
+            table_logs = table_logs[:5]
+        else:
+            table_logs = db.session.query(table).filter_by(device_id=device_id).order_by(desc(table.id)).limit(5).all()
+
+        # get device name
+        device_name = Device.query.filter_by(id=device_id).first().name
+
+        log_list = []
+        for table_log in table_logs:
+            # log = row2dict(table_log)
+            log = row2ordereddict(table_log)
+            log["start_time"] = log["start_time"].replace(tzinfo=utc).astimezone(tzchina).strftime(
+                "%Y/%m/%d-%H:%M:%S")
+            log["end_time"] = log["end_time"].replace(tzinfo=utc).astimezone(tzchina).strftime(
+                "%Y/%m/%d-%H:%M:%S") if table_log.end_time is not None else 'Inuse'
+            log["device_name"] = device_name
+            log.move_to_end('device_name', last=False)
+            log_list.append(log)
+
+        # print(log_list)
+        # table = generate_table(log_list[0])(log_list)
+        TableCls = create_table('TableCls', options=dict(classes=['table', 'table-bordered'], no_items='Empty'))
+        for key in log_list[0].keys():
+            TableCls.add_column(key, Col(key.capitalize()))
+        table = TableCls(log_list)
+        # print(table.__html__())
+        warn = 0
+    else:
+        warn = 'No logs for this device!'
+        table = 0
+    return render_template('log/device_log.html', warn=warn, table=table)

@@ -2,7 +2,7 @@ from flask_wtf import FlaskForm
 from wtforms import StringField, TextAreaField, SelectField, \
     SubmitField, FloatField, IntegerField, BooleanField
 from wtforms.fields.html5 import DateTimeField
-from wtforms.validators import Required, Length
+from wtforms.validators import Required, Length, Email
 from flask_table import Table, Col
 from datetime import datetime
 
@@ -132,30 +132,58 @@ fields = {'INT': IntegerField,
           }
 
 
-def generate_form(columns, **kwargs):
+def generate_form(form_type, columns, **kwargs):
+    """
+    generate login / logout form according to form type and table columns
+    :param form_type: str -> login / logout
+    :param columns: table columns from sqlalchemy table description
+    :param kwargs: may extend some features later
+    :return: wtforms' form object
+    """
     class BaseForm(FlaskForm):
+        """
+        base form with common username, device_status fields
+        """
         username = StringField('User name', validators=[Required(), Length(1, 64)])
+        email = StringField('Email', validators=[Required(), Length(1, 64), Email()])
         device_status = SelectField('Device status', coerce=int,
                                     choices=[(0, 'None'), (1, 'Normal'), (2, 'Broken'), (3, 'Fixing'),
                                              (4, 'Terminated')],
                                     default=0,
                                     validators=[Required()])
 
-    for c in list(columns)[3:]:  # ignore id, user and status fields
+    for c in list(columns)[5:]:  # ignore id, device_id, device_status, username and email fields
         field = fields.get(str(c.type)[:3])
-        # if isinstance(field, DateTimeField):
-        if str(c.type)[:3] == 'DAT' or str(c.name) == 'username':
+        if str(c.type)[:3] == 'DAT':
             # field = field(c.name.capitalize(), format="%Y-%m-%d %H:%M", default=datetime.utcnow().replace(
             # tzinfo=utc).astimezone(tzchina))
             continue
-        else:
+        elif form_type == 'login' and (str(c.name) == 'product' or str(c.name) == 'remarks'):  # login form
+            continue
+        elif form_type == 'logout' and (str(c.name) == 'material' or str(c.name) == 'details'):  # logout form
+            continue
+        else:  # Text field (details / remarks are not required)
             field = field(c.name.capitalize(), validators=[Required()] if str(c.type)[:3] != 'TEX' else None)
         setattr(BaseForm, c.name, field)
 
     class Form(BaseForm):
+        """
+        add submit filed
+        """
         submit = SubmitField('Submit')
 
         def __init__(self, *args, **kwargs):
             super(Form, self).__init__(*args, **kwargs)
 
     return Form(**kwargs)
+
+
+'''def generate_table(dict_attr):
+
+    class GeneralTable(Table):
+        classes = ['table', 'table-bordered']
+
+    for key in dict_attr.keys():
+        setattr(GeneralTable, key, Col(key.capitalize()))
+
+    return GeneralTable'''

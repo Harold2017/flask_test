@@ -9,6 +9,10 @@
     <label for="device_name">Device Name</label>
     <input type="text" id="device_name" placeholder="device name"/>
 </div>
+<div class="container">
+    <p class="text-muted">ID, Device ID, Device Status, Username, Email, Start_time and End_time are built-in.</p>
+    <p class="text-muted">Please remember material/product and details/remarks.</p>
+</div>
 <div class="col-md-4">
     <form action="" method="POST">
         <table class="table table-borderless">
@@ -72,8 +76,9 @@
                 type: 'POST',
                 success: function(data) {
                     alert('New Type Device Added!');
-                    console.log(data)
-                    },
+                    //console.log(data);
+                    window.location.href="{{ url_for('main.edit') }}";
+                },
                 error: function(error) {
                     alert(error);
                 }

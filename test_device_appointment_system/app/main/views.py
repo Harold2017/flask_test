@@ -194,20 +194,20 @@ def edit_device_type():
             device_name = r.pop(0)['device_name']
             field_list = ['id INT NOT NULL AUTO_INCREMENT PRIMARY KEY', 'device_id INT',
                           "device_status VARCHAR(32) DEFAULT 'Normal'",
-                          'username VARCHAR(64)', 'start_time DATETIME DEFAULT CURRENT_TIMESTAMP',
+                          'username VARCHAR(64)', 'email VARCHAR(64)',
+                          'start_time DATETIME DEFAULT CURRENT_TIMESTAMP',
                           'end_time DATETIME ON UPDATE CURRENT_TIMESTAMP']
             for field in r:
                 field_list.append(field['field_name']+' '+field['field_type'])
             # print(field_list)
             create_table_query = 'CREATE TABLE ' + device_name + ' ( ' + ", ".join(field_list) + ' );'
             # print(create_table_query)
-            result = db.session.execute(create_table_query)
+            db.session.execute(create_table_query)
             device_type = DeviceType(type=device_name)
             db.session.add(device_type)
             db.session.commit()
-            # print(result)
             flash('New Type Device Added!')
-            return redirect(url_for('main.edit'))
+            return 'Succeed!', 200
         except Exception as e:
             # print(e)
             db.session.rollback()
