@@ -10,8 +10,9 @@ from ..QRcode.QRcode import qr_generator
 from flask_sqlalchemy import get_debug_queries
 from sqlalchemy.ext.automap import automap_base
 
-
 BASEURL = 'http://namihk.com'
+
+
 # BASEURL = 'http://localhost:5000'
 
 
@@ -101,6 +102,7 @@ def edit():
         elif GloveBoxLog.query.filter_by(device_id=device.id).first():
             logs = BASEURL + "/form/glovebox/glovebox_log/" + str(device.id)
         else:
+            logs = None
             for devicetype in devicetypes:
                 table = getattr(Base.classes, devicetype.type,
                                 None)  # getattr to access attribute like Base.classes.device_type
@@ -119,7 +121,7 @@ def edit():
                             "img_path": img_path,
                             "users": find_users(device),
                             "logs": logs
-                           })
+                            })
 
     user_list = []
     for user in users:
@@ -214,7 +216,7 @@ def edit_device_type():
                           'start_time DATETIME DEFAULT CURRENT_TIMESTAMP',
                           'end_time DATETIME ON UPDATE CURRENT_TIMESTAMP']
             for field in r:
-                field_list.append(field['field_name']+' '+field['field_type'])
+                field_list.append(field['field_name'] + ' ' + field['field_type'])
             # print(field_list)
             create_table_query = 'CREATE TABLE ' + device_name + ' ( ' + ", ".join(field_list) + ' );'
             # print(create_table_query)
