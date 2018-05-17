@@ -116,9 +116,12 @@ def main():
                         else:
                             continue
                     device_name = Device.query.filter_by(id=d).first().name
-                    for log in logs:
-                        delta = log.end_time - log.start_time
-                        t += delta
+                    if logs is not None:
+                        for log in logs:
+                            delta = log.end_time - log.start_time
+                            t += delta
+                    else:
+                        t = 0
                 total[device_name] = [round(t / timedelta(hours=8 * 5 * days / 7) * 100, 2),
                                       round(t / timedelta(hours=1), 2)]
             attr = []
