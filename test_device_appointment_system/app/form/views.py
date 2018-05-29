@@ -74,7 +74,7 @@ def log(device_id):
                 except:
                     db.session.rollback()
                     db.session.flush()
-            return render_template('log/log_logout.html', form=form, logs=logs)
+            return render_template('log/log_logout.html', device_id=device_id, form=form, logs=logs)
     elif device.status == 'Terminated':
         return render_template('log/terminated.html')
     else:
@@ -224,7 +224,7 @@ def glovebox(device_id):
                 except:
                     db.session.rollback()
                     db.session.flush()
-            return render_template('log/log_logout.html', form=form, logs=logs)
+            return render_template('log/log_logout.html', device_id=device_id, form=form, logs=logs)
     elif device.status == 'Terminated':
         return render_template('log/terminated.html')
     else:
@@ -355,7 +355,7 @@ def new_log_form(device_type, device_id):
                     db.session.rollback()
                     db.session.flush()
                     print(e)
-            return render_template('log/log_logout.html', form=form, logs=logs)
+            return render_template('log/log_logout.html', device_id=device_id, form=form, logs=logs)
     elif device.status == 'Terminated':
         return render_template('log/terminated.html')
     else:

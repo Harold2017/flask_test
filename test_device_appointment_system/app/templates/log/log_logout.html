@@ -6,9 +6,12 @@
 {% block page_content %}
 <div class="page-header">
     <h2>Please fill in the following log form (LOGOUT)</h2>
+    <span><h3><a href="{{ url_for('appointment.calendar', selected_device=device_id) }}">Booking</a>&nbsp&nbsp<a href={{ logs }} target="_blank">Log</a></h3></span>
 </div>
 {{ wtf.quick_form(form) }}
+<br/>
 <div class="container">
+    <p>Booking this device by this <a href="{{ url_for('appointment.calendar', selected_device=device_id) }}">link</a>.</p>
 	<p>See the usage <a href={{ logs }} target="_blank">Log</a> for your reference.</p>
 </div>
 {% endblock %}
