@@ -132,6 +132,11 @@ fields = {'INT': IntegerField,
           }
 
 
+class BookedForm(FlaskForm):
+    email = StringField('Please input your booking email', validators=[Required(), Length(1, 64), Email()])
+    submit = SubmitField('Submit')
+
+
 def generate_form(form_type, columns, **kwargs):
     """
     generate login / logout form according to form type and table columns

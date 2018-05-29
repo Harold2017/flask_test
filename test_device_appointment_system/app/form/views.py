@@ -1,10 +1,10 @@
 from . import form
 from .forms import StartForm, EndForm, ItemTable, GloveBoxStartForm, \
-    GloveBoxEndForm, GloveItemTable, StateTransferForm, generate_form
-from flask import render_template
+    GloveBoxEndForm, GloveItemTable, StateTransferForm, generate_form, BookedForm
+from flask import render_template, redirect, url_for, request
 from datetime import datetime, timedelta
 import os
-from ..models import Device, DeviceUsageLog, GloveBoxLog, AppointmentEvents
+from ..models import Device, DeviceUsageLog, GloveBoxLog, AppointmentEvents, User
 from .. import db
 from pytz import timezone
 from sqlalchemy import desc, Table, MetaData, inspect, and_
@@ -30,7 +30,10 @@ def check_booking(device_id):
              AppointmentEvents.start <= time,
              AppointmentEvents.end >= time)
     ).first()
-    if event:
+    device = Device.query.filter_by(id=device_id).first()
+    if device.device_inuse:
+        return event
+    elif event:
         if event.start <= time - timedelta(seconds=1800):
             db.session.delete(event)
             db.session.commit()
@@ -41,14 +44,30 @@ def check_booking(device_id):
 @form.route('/<device_id>', methods=['GET', 'POST'])
 def log(device_id):
     device_id = int(device_id)
-    device = Device.query.filter_by(id=device_id).first()
     logs = BASEURL + "/form/device_log/" + str(device_id)
     booked_event = check_booking(device_id)
     if booked_event:
         start = booked_event.start.replace(tzinfo=utc).astimezone(tzchina).strftime('%Y/%m/%d-%H:%M:%S')
         end = booked_event.end.replace(tzinfo=utc).astimezone(tzchina).strftime('%Y/%m/%d-%H:%M:%S')
+        user = User.query.filter_by(id=booked_event.user_id).first_or_404()
+        # form to collect user email
+        form = BookedForm()
+        if form.validate_on_submit():
+            email = form.email.data
+            # if user's email is equal to booked email, then redirect to common login
+            if email == user.email:
+                return redirect(url_for('form.common_device_login', device_id=device_id, logs=logs))
         return render_template('log/booked.html', username=booked_event.name, start=start,
-                               end=end, device_id=device_id, logs=logs)
+                               end=end, device_id=device_id, logs=logs, form=form)
+    else:
+        return redirect(url_for('form.common_device_login', device_id=device_id, logs=logs))
+
+
+@form.route('/common_device/login', methods=['GET', 'POST'])
+def common_device_login():
+    device_id = int(request.args['device_id'])
+    logs = request.args['logs']
+    device = Device.query.filter_by(id=device_id).first_or_404()
     if device.status == 'Normal':
         if device.device_inuse is False:
             form = StartForm()
@@ -93,6 +112,13 @@ def log(device_id):
                         device.status = status
                         device.state_transfer = True
                     device.device_inuse = False
+                    # delete appointment event to release booking check
+                    event = AppointmentEvents.query.filter(
+                        and_(AppointmentEvents.device_id == device_id,
+                             AppointmentEvents.start <= end_time,
+                             AppointmentEvents.end >= end_time)
+                    ).first()
+                    db.session.delete(event)
                     db.session.commit()
                     return render_template('log/success.html')
                 except:
@@ -184,17 +210,30 @@ def device_log(device_id):
 @form.route('/glovebox/<device_id>', methods=['GET', 'POST'])
 def glovebox(device_id):
     device_id = int(device_id)
-    device = Device.query.filter_by(id=device_id).first()
-    if GloveBoxLog.query.filter_by(device_id=device_id).first():
-        logs = BASEURL + "/form/glovebox/glovebox_log/" + str(device_id)
-    else:
-        logs = None
+    logs = BASEURL + "/form/glovebox/glovebox_log/" + str(device_id)
     booked_event = check_booking(device_id)
     if booked_event:
         start = booked_event.start.replace(tzinfo=utc).astimezone(tzchina).strftime('%Y/%m/%d-%H:%M:%S')
         end = booked_event.end.replace(tzinfo=utc).astimezone(tzchina).strftime('%Y/%m/%d-%H:%M:%S')
+        user = User.query.filter_by(id=booked_event.user_id).first_or_404()
+        # form to collect user email
+        form = BookedForm()
+        if form.validate_on_submit():
+            email = form.email.data
+            # if user's email is equal to booked email, then redirect to common login
+            if email == user.email:
+                return redirect(url_for('form.glovebox_login', device_id=device_id, logs=logs))
         return render_template('log/booked.html', username=booked_event.name, start=start,
-                               end=end, device_id=device_id, logs=logs)
+                               end=end, device_id=device_id, logs=logs, form=form)
+    else:
+        return redirect(url_for('form.glovebox_login', device_id=device_id, logs=logs))
+
+
+@form.route('/glovebox/login', methods=['GET', 'POST'])
+def glovebox_login():
+    device_id = int(request.args["device_id"])
+    logs = request.args["logs"]
+    device = Device.query.filter_by(id=device_id).first()
     if device.status == 'Normal':
         if device.device_inuse is False:
             form = GloveBoxStartForm()
@@ -249,6 +288,14 @@ def glovebox(device_id):
                         device.status = status
                         device.state_transfer = True
                     device.device_inuse = False
+                    # delete appointment event to release booking check
+                    end_time = datetime.utcnow()
+                    event = AppointmentEvents.query.filter(
+                        and_(AppointmentEvents.device_id == device_id,
+                             AppointmentEvents.start <= end_time,
+                             AppointmentEvents.end >= end_time)
+                    ).first()
+                    db.session.delete(event)
                     db.session.commit()
                     return render_template('log/success.html')
                 except:
@@ -327,20 +374,37 @@ def glovebox_log(device_id):
 def new_log_form(device_type, device_id):
     device_type = str(device_type)
     device_id = int(device_id)
+    logs = BASEURL + "/form/new/" + device_type + '/log/' + str(device_id)
+    booked_event = check_booking(device_id)
+    if booked_event:
+        start = booked_event.start.replace(tzinfo=utc).astimezone(tzchina).strftime('%Y/%m/%d-%H:%M:%S')
+        end = booked_event.end.replace(tzinfo=utc).astimezone(tzchina).strftime('%Y/%m/%d-%H:%M:%S')
+        user = User.query.filter_by(id=booked_event.user_id).first_or_404()
+        # form to collect user email
+        form = BookedForm()
+        if form.validate_on_submit():
+            email = form.email.data
+            # if user's email is equal to booked email, then redirect to common login
+            if email == user.email:
+                return redirect(url_for('form.new_device_type_login', device_type=device_type,
+                                        device_id=device_id, logs=logs))
+        return render_template('log/booked.html', username=booked_event.name, start=start,
+                               end=end, device_id=device_id, logs=logs, form=form)
+    else:
+        return redirect(url_for('form.new_device_type_login', device_type=device_type, device_id=device_id, logs=logs))
+
+
+@form.route('/new_device_type/login', methods=["GET", "POST"])
+def new_device_type_login():
+    device_type = request.args["device_type"]
+    device_id = request.args["device_id"]
+    logs = request.args["logs"]
     device = Device.query.filter_by(id=device_id).first()
     table_description = Table(device_type, MetaData(), autoload=True, autoload_with=db.engine)  # get table description
 
     Base = automap_base()
     Base.prepare(db.engine, reflect=True)  # use automap of sqlalchemy to get table's corresponding class model
     table = getattr(Base.classes, device_type, None)  # getattr to access attribute like Base.classes.device_type
-
-    logs = BASEURL + "/form/new/" + device_type + '/log/' + str(device_id)
-    booked_event = check_booking(device_id)
-    if booked_event:
-        start = booked_event.start.replace(tzinfo=utc).astimezone(tzchina).strftime('%Y/%m/%d-%H:%M:%S')
-        end = booked_event.end.replace(tzinfo=utc).astimezone(tzchina).strftime('%Y/%m/%d-%H:%M:%S')
-        return render_template('log/booked.html', username=booked_event.name, start=start,
-                               end=end, device_id=device_id, logs=logs)
     if device.status == 'Normal':
         if device.device_inuse is False:
             form = generate_form('login', table_description.columns)
@@ -385,6 +449,13 @@ def new_log_form(device_type, device_id):
                         device.status = data['device_status']
                         device.state_transfer = True
                     device.device_inuse = False
+                    # delete appointment event to release booking check
+                    event = AppointmentEvents.query.filter(
+                        and_(AppointmentEvents.device_id == device_id,
+                             AppointmentEvents.start <= data["end_time"],
+                             AppointmentEvents.end >= data["end_time"])
+                    ).first()
+                    db.session.delete(event)
                     db.session.commit()
                     return render_template('log/success.html')
                 except Exception as e:

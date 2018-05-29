@@ -9,6 +9,7 @@
 	<span><h3><a href="{{ url_for('appointment.calendar', selected_device=device_id) }}">Booking</a>&nbsp&nbsp<a href={{ logs }} target="_blank">Log</a></h3></span>
 </div>
 <br/>
+{{ wtf.quick_form(form) }}
 {% endblock %}
 
 {% block scripts %}
