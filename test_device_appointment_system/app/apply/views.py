@@ -109,9 +109,11 @@ def confirm(user_email):
                 c_d.users.append(user)
                 d_names.append(c_d.name)
                 db.session.add(c_d)
-            application.approved_devices = str(c_devices)
-            application.application_state = 'Approved'
-            db.session.add(application)
+            for application in applications:
+                application.approved_devices = str([x for x in ast.literal_eval(application.devices)
+                                                    if int(x) in c_devices])
+                application.application_state = 'Approved'
+                db.session.add(application)
             try:
                 db.session.commit()
                 send_email(user_email, 'Application Confirmed',
