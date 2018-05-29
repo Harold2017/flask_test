@@ -88,6 +88,9 @@ def remove_data(token, device_id):
     r = request.get_json(force=True)
     event_id = r['event_id']
     event = AppointmentEvents.query.filter_by(id=event_id).first()
-    db.session.delete(event)
-    db.session.commit()
-    return jsonify({"id": event.id}), 200
+    if user.id == event.user_id:
+        db.session.delete(event)
+        db.session.commit()
+        return jsonify({"id": event.id}), 200
+    else:
+        return "No permission to access this event", 401

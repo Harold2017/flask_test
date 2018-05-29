@@ -82,7 +82,7 @@ def apply_device():
 def confirm(user_email):
     if current_user.email not in email_receiver and current_user.email != 'harold@harold.com':
         return render_template('403.html'), 403
-    application = ApplicationLog.query.filter_by(user_email=user_email).order_by(desc(ApplicationLog.id)).first()
+    application = ApplicationLog.query.filter_by(user_email=user_email).order_by(desc(ApplicationLog.id)).first_or_404()
     if application.application_state == 'Apply':
         applications = ApplicationLog.query.filter_by(user_email=user_email).filter_by(application_state='Apply'). \
             order_by(desc(ApplicationLog.id)).all()

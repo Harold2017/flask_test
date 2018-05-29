@@ -4,10 +4,10 @@ from .forms import StartForm, EndForm, ItemTable, GloveBoxStartForm, \
 from flask import render_template
 from datetime import datetime, timedelta
 import os
-from ..models import Device, DeviceUsageLog, GloveBoxLog
+from ..models import Device, DeviceUsageLog, GloveBoxLog, AppointmentEvents
 from .. import db
 from pytz import timezone
-from sqlalchemy import desc, Table, MetaData, inspect
+from sqlalchemy import desc, Table, MetaData, inspect, and_
 from sqlalchemy.ext.automap import automap_base
 from flask_table import create_table, Col
 from collections import OrderedDict
@@ -20,11 +20,35 @@ log_folder = os.path.abspath('app') + '\\form\\log\\'
 BASEURL = 'http://namihk.com'
 
 
+# check booking condition of the scanned QR-code device
+# if the device is booked during this time period, only user with booked email can login
+# if the booked user not login within 30 mins, the booking will be cancelled and the device will be open for login
+def check_booking(device_id):
+    time = datetime.utcnow()
+    event = AppointmentEvents.query.filter(
+        and_(AppointmentEvents.device_id == device_id,
+             AppointmentEvents.start <= time,
+             AppointmentEvents.end >= time)
+    ).first()
+    if event:
+        if event.start <= time - timedelta(seconds=1800):
+            db.session.delete(event)
+            db.session.commit()
+            return None
+    return event
+
+
 @form.route('/<device_id>', methods=['GET', 'POST'])
 def log(device_id):
     device_id = int(device_id)
     device = Device.query.filter_by(id=device_id).first()
     logs = BASEURL + "/form/device_log/" + str(device_id)
+    booked_event = check_booking(device_id)
+    if booked_event:
+        start = booked_event.start.replace(tzinfo=utc).astimezone(tzchina).strftime('%Y/%m/%d-%H:%M:%S')
+        end = booked_event.end.replace(tzinfo=utc).astimezone(tzchina).strftime('%Y/%m/%d-%H:%M:%S')
+        return render_template('log/booked.html', username=booked_event.name, start=start,
+                               end=end, device_id=device_id, logs=logs)
     if device.status == 'Normal':
         if device.device_inuse is False:
             form = StartForm()
@@ -165,6 +189,12 @@ def glovebox(device_id):
         logs = BASEURL + "/form/glovebox/glovebox_log/" + str(device_id)
     else:
         logs = None
+    booked_event = check_booking(device_id)
+    if booked_event:
+        start = booked_event.start.replace(tzinfo=utc).astimezone(tzchina).strftime('%Y/%m/%d-%H:%M:%S')
+        end = booked_event.end.replace(tzinfo=utc).astimezone(tzchina).strftime('%Y/%m/%d-%H:%M:%S')
+        return render_template('log/booked.html', username=booked_event.name, start=start,
+                               end=end, device_id=device_id, logs=logs)
     if device.status == 'Normal':
         if device.device_inuse is False:
             form = GloveBoxStartForm()
@@ -305,6 +335,12 @@ def new_log_form(device_type, device_id):
     table = getattr(Base.classes, device_type, None)  # getattr to access attribute like Base.classes.device_type
 
     logs = BASEURL + "/form/new/" + device_type + '/log/' + str(device_id)
+    booked_event = check_booking(device_id)
+    if booked_event:
+        start = booked_event.start.replace(tzinfo=utc).astimezone(tzchina).strftime('%Y/%m/%d-%H:%M:%S')
+        end = booked_event.end.replace(tzinfo=utc).astimezone(tzchina).strftime('%Y/%m/%d-%H:%M:%S')
+        return render_template('log/booked.html', username=booked_event.name, start=start,
+                               end=end, device_id=device_id, logs=logs)
     if device.status == 'Normal':
         if device.device_inuse is False:
             form = generate_form('login', table_description.columns)
