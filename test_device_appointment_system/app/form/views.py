@@ -118,7 +118,8 @@ def common_device_login():
                              AppointmentEvents.start <= end_time,
                              AppointmentEvents.end >= end_time)
                     ).first()
-                    db.session.delete(event)
+                    if event:
+                        db.session.delete(event)
                     db.session.commit()
                     return render_template('log/success.html')
                 except:
@@ -295,7 +296,8 @@ def glovebox_login():
                              AppointmentEvents.start <= end_time,
                              AppointmentEvents.end >= end_time)
                     ).first()
-                    db.session.delete(event)
+                    if event:
+                        db.session.delete(event)
                     db.session.commit()
                     return render_template('log/success.html')
                 except:
@@ -455,7 +457,8 @@ def new_device_type_login():
                              AppointmentEvents.start <= data["end_time"],
                              AppointmentEvents.end >= data["end_time"])
                     ).first()
-                    db.session.delete(event)
+                    if event:
+                        db.session.delete(event)
                     db.session.commit()
                     return render_template('log/success.html')
                 except Exception as e:
