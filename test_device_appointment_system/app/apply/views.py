@@ -89,8 +89,8 @@ def confirm(user_email):
         # print(type(application.devices))
         # devices = [int(d.strip()) for d in ast.literal_eval(application.devices)]
         d_list = []
+        id_list = []
         for application in applications:
-            id_list = []
             devices = [int(d) for d in ast.literal_eval(application.devices)]
             # print(type(devices))
             for d in devices:
