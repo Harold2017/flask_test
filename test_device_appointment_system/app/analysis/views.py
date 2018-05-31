@@ -108,8 +108,8 @@ def main():
                                         None)  # getattr to access attribute like Base.classes.device_type
                         query = db.session.query(table).filter_by(device_id=d).first()
                         if query:
+                            # filter(~table.remarks.op('regexp')('Not logout'))
                             logs = db.session.query(table).filter_by(device_id=d). \
-                                filter(~table.remarks.op('regexp')('Not logout')). \
                                 filter(table.end_time is not None). \
                                 filter(table.start_time <= datetime.utcnow().date()). \
                                 filter(table.start_time >= (datetime.utcnow().date() - timedelta(days=days))).all()
