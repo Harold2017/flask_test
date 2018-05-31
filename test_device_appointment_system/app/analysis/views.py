@@ -109,8 +109,10 @@ def main():
                         query = db.session.query(table).filter_by(device_id=d).first()
                         if query:
                             # filter(~table.remarks.op('regexp')('Not logout'))
+                            # column.isnot(None) is equal to column != None
+                            # but cannot use column is not None or ~(column is None)
                             logs = db.session.query(table).filter_by(device_id=d). \
-                                filter(table.end_time is not None). \
+                                filter(table.end_time.isnot(None)). \
                                 filter(table.start_time <= datetime.utcnow().date()). \
                                 filter(table.start_time >= (datetime.utcnow().date() - timedelta(days=days))).all()
                             break
