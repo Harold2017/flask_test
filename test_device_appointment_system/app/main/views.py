@@ -11,7 +11,8 @@ from flask_sqlalchemy import get_debug_queries
 from sqlalchemy.ext.automap import automap_base
 
 
-BASEURL = 'http://namihk.com'
+# BASEURL = 'http://namihk.com'
+BASEURL = 'http://localhost:5000'
 
 
 def find_users(device):

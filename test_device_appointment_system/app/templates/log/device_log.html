@@ -12,8 +12,57 @@
 
 {% if table %}
 
-<div class="container">
+<div class="container" id="table">
     {{ table }}
 </div>
+<div>
+    <button type="button" class="btn btn-default" id="show_more">Show More</button>
+</div>
+<script src="//cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+<script>
+    var offset = 5;
+    $('#show_more').click(function() {
+    $.ajax({
+    type: "POST",
+    contentType: "application/json",
+    url: "{{ url }}",
+    data: JSON.stringify({"offset": offset}),
+    dataType: "text",
+    cache: false,
+    timeout: 600000,
+    success: function (data) {
+       //console.log("SUCCESS : ", data);
+       $("#table").append(data);
+
+
+       //var tableRef = document.getElementsByClassName('table')[0].getElementsByTagName('tbody')[0];
+
+       // Insert a row in the table at the last row
+       //var newRow   = tableRef.insertRow(tableRef.rows.length);
+
+       // Insert a cell in the row at index 0
+       //var newCell  = newRow.insertCell(0);
+
+       // Append a text node to the cell
+       //var newText  = document.createTextNode('New row');
+       //newCell.appendChild(newText);
+
+       //for (var i = 0; i < data.length; i++) {
+       //    tableRef.append('<tr><td>' + data[i].accountNumber + '</td><td>' + data[i].category + '</td><td>' + data[i].ssn +'</td><td>' + data[i].ssn +'</td><td>' + data[i].ssn +'</td></tr>');
+
+         // alert(data[i].accountNumber)
+
+
+       //}
+        offset = offset + 5;
+       // console.log(offset);
+
+    },
+    error: function (e) {
+        console.log("ERROR : ", e);
+    }
+});
+});
+</script>
 {% endif %}
 {% endblock %}
