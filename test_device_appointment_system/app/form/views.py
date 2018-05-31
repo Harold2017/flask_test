@@ -16,8 +16,7 @@ tzchina = timezone('Asia/Shanghai')
 utc = timezone('UTC')
 
 log_folder = os.path.abspath('app') + '\\form\\log\\'
-# BASEURL = 'http://namihk.com'
-BASEURL = 'http://localhost:5000'
+BASEURL = 'http://namihk.com'
 
 
 # check booking condition of the scanned QR-code device
