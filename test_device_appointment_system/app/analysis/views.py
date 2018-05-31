@@ -117,7 +117,7 @@ def main():
                         else:
                             continue
                     device_name = Device.query.filter_by(id=d).first().name
-                    if logs is not None:
+                    if logs is not None and len(logs) != 0:
                         for log in logs:
                             delta = log.end_time - log.start_time
                             t += delta
