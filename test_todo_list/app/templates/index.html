@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+{% import "bootstrap/wtf.html" as wtf %}
+
+{% block title %}Harold{% endblock %}
+
+{% block page_content %}
+<section class="header">
+    <h2 class="title">Simple Todo-lists</h2>
+    <div class="row">
+        <div class="three columns value-prop">
+            <div class="six columns">
+                {% if form.errors %}
+                <div class="has-error">
+                    <strong>
+                        Error occurs!
+                    </strong>
+                </div>
+                {% endif %}
+                <form action="{{ url_for('main.new_todo_list') }}" method=post>
+                    {{ form.hidden_tag() }}
+                    <dl>
+                        <dd>
+                            {{ form.todo(class_="u-full-width", placeholder="Enter your todo") }}
+                        </dd>
+                        <dt>
+                            {{ form.submit(class="button button-primary", value="Start one row") }}
+                        </dt>
+                    </dl>
+                </form>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}
+
+{% block scripts %}
+{{ super() }}
+{% endblock %}
