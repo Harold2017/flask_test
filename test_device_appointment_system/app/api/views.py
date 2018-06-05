@@ -22,7 +22,8 @@ def return_data(device_id):
     ).all()
     response = []
     for event in events:
-        response.append({"title": event.name + ' Event ID: ' + str(event.id), "start": event.start,
+        response.append({"title": event.name + ' Event ID: ' + str(event.id) + ' Remark: ' + str(event.remark),
+                         "start": event.start,
                          "end": event.end, "id": event.id})
     return jsonify(response), 200
 

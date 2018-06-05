@@ -90,7 +90,7 @@
     </div>
     <div class='col-md-5'>
         <div class="form-group">
-                <label>Name</label>
+                <label>Username</label>
                 <input type='text' class="form-control required" id='name' required/>
         </div>
     </div>
@@ -149,20 +149,13 @@
 			defaultView: 'agendaWeek',
 			weekends: false,
 			listDayFormat: true,
-			// defaultDate: Date(),
 			editable: true,
 			displayEventEnd: true,
 			eventLimit: true, // allow "more" link when too many events
 			timezone: 'local', // utctime from server, then transfer to local time
 			events: {
-				//url: '/data',
 				url: '{{ url_for('api.return_data', device_id=device_id)}}',
-				//url: '../../api/v1.0/data/' + '{{ device_id }}',
 				type: 'post',
-				/*data: {
-				    start: Date(),
-				    end: moment().add(7, 'days')
-				},*/
 				error: function() {
 					$('#script-warning').show();
 				},
@@ -179,40 +172,10 @@
 			loading: function(bool) {
 				$('#loading').toggle(bool);
 			},
-			/*dayClick: function(date,allDay,jsEvent,view) {
-				$(this).css('background-color', 'red');
-				var selDate = $.fullCalendar.formatDate(date,"YYYY-MM-DD");
-				alert(selDate);
-				$('#calendar').fullCalendar('changeView', 'agendaDay', selDate);
-			},
-			eventClick: function(calEvent, jsEvent, view) {
-				//alert('Event: ' + calEvent.title);
-				alert('View: ' + view.name);
-				if (view.name == 'agendaDay') {
-				    $(this).css('border-color', 'green');
-				}
-				else {
-				    $(this).css('border-color', 'red');
-				};
-			}*/
-
 		});
 
 	});
 
-/*$('#start_time').datetimepicker({
-        daysOfWeekDisabled: [0, 6],
-        inline: true,
-        sideBySide: true,
-        stepping: 30
-        });
-
-$('#end_time').datetimepicker({
-        daysOfWeekDisabled: [0, 6],
-        inline: true,
-        sideBySide: true,
-        stepping: 30
-        });*/
 
 $('#start_time').datetimepicker({
     daysOfWeekDisabled: [0, 6],
@@ -232,43 +195,18 @@ $("#end_time").on("dp.change", function (e) {
 
 $('#appoint').on('click', function(e){
     var start_time = $('#start_time_data').val();
-    //console.log(start_time);
     start_time = new Date(start_time);
-    // start_time = start_time.toISOString();
-    //console.log(start_time);
     var end_time = $('#end_time_data').val();
     end_time = new Date(end_time);
-    //console.log(end_time);
     var title = $('#name').val();
-    //console.log(title);
     var remark = $('#remark').val();
-    /*event = {
-    "title": title,
-    "start": start_time,
-    "end": end_time,
-    "remark": remark,
-    };
-    events = $('#calendar').fullCalendar( 'clientEvents');
-    console.log(events);
-    var cnt=0;
-    for (let x of events) {
-        if (x.title == title) {
-           cnt = cnt + 1;
-        }
-    }; // first try to find whether conflict exists: two ways: 1. events in fullcalendar; 2. send event to server and see the callback
-    if (cnt = 0) {
-        $('#calendar').fullCalendar('renderEvent', event);
-    };
-    //$('#calendar').fullCalendar('renderEvent', event);
-    */
     var url = "{{ url_for('api.add_data', token=token, device_id=device_id) }}";
     var data = {
         "title": title,
         "start": start_time,
         "end": end_time,
-	"remark": remark
+	    "remark": remark
     };
-    console.log(data);
     $.ajax({
         type: 'POST',
         url: url,
@@ -277,13 +215,11 @@ $('#appoint').on('click', function(e){
         dataType:'json',
         timeout: 10000,
         success: function(result) {
-            console.log(result);
-            // let r = JSON.parse(result);
             let r = result;
             if (r["blocked"] == 0) {
                 alert("Success");
                 $('#calendar').fullCalendar('renderEvent', {
-                    "title": title + ' Event ID: ' + r["id"],
+                    "title": title + ' Event ID: ' + r["id"] + ' Remark: ' + data["remark"],
                     "start": start_time,
                     "end": end_time,
                     "id": r["id"]
@@ -295,7 +231,6 @@ $('#appoint').on('click', function(e){
             } else {
                 alert("Failed");
             }
-            // console.log(result);
         },
         error: function(xhr, type) {
         }
