@@ -12,6 +12,14 @@
 <div class="container">
 	<p>See the usage <a href={{ logs }} target="_blank">Log</a> for your reference.</p>
 </div>
+<div class="container">
+    {% if table %}
+    <h5>Other Available Devices of the same device type</h5>
+    {{ table }}
+    {% else %}
+    <h5>No Other Available Devices of the same device type</h5>
+    {% endif %}
+</div>
 {% endblock %}
 
 {% block scripts %}

@@ -7,6 +7,14 @@
 	<h2>The device has been Terminated already.</h2>
 	<p>Please contact with NAMI's Lab Manager for more information.</p>
 </div>
+<div class="container">
+    {% if table %}
+    <h5>Other Available Devices of the same device type</h5>
+    {{ table }}
+    {% else %}
+    <h5>No Other Available Devices of the same device type</h5>
+    {% endif %}
+</div>
 {% endblock %}
 
 {% block scripts %}

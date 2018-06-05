@@ -8,6 +8,14 @@
     <h2>Please fill in the following log form (LOGOUT)</h2>
     <span><h3><a href="{{ url_for('appointment.calendar', selected_device=device_id) }}">Booking</a>&nbsp&nbsp<a href={{ logs }} target="_blank">Log</a></h3></span>
 </div>
+<div class="container">
+    {% if table %}
+    <h5>Other Available Devices of the same device type</h5>
+    {{ table }}
+    {% else %}
+    <h5>No Other Available Devices of the same device type</h5>
+    {% endif %}
+</div>
 {{ wtf.quick_form(form) }}
 <br/>
 <div class="container">

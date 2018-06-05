@@ -9,7 +9,7 @@ from .. import db
 from pytz import timezone
 from sqlalchemy import desc, Table, MetaData, inspect, and_
 from sqlalchemy.ext.automap import automap_base
-from flask_table import create_table, Col
+from flask_table import create_table, Col, LinkCol
 from collections import OrderedDict
 
 tzchina = timezone('Asia/Shanghai')
@@ -170,7 +170,7 @@ def common_device_login():
 
 
 def query_device_log(device_id, limit=5, offset=0):
-    d_logs = DeviceUsageLog.query.filter_by(device_id=device_id).order_by(desc(DeviceUsageLog.id)).\
+    d_logs = DeviceUsageLog.query.filter_by(device_id=device_id).order_by(desc(DeviceUsageLog.id)). \
         limit(limit).offset(offset).all()
     device_name = Device.query.filter_by(id=device_id).first().name
     ls = []
@@ -339,7 +339,7 @@ def glovebox_login():
 
 
 def query_glovebox_log(device_id, limit=5, offset=0):
-    g_logs = GloveBoxLog.query.filter_by(device_id=device_id).order_by(desc(GloveBoxLog.id)).\
+    g_logs = GloveBoxLog.query.filter_by(device_id=device_id).order_by(desc(GloveBoxLog.id)). \
         limit(limit).offset(offset).all()
     device_name = Device.query.filter_by(id=device_id).first().name
     ls = []
@@ -395,6 +395,30 @@ def glovebox_log(device_id):
                            url=url_for('form.glovebox_log', device_id=device_id))
 
 
+def generate_table(device_type, device_id):
+    Base = automap_base()
+    Base.prepare(db.engine, reflect=True)  # use automap of sqlalchemy to get table's corresponding class model
+    table = getattr(Base.classes, device_type, None)  # getattr to access attribute like Base.classes.device_type
+    devices = db.session.query(table.device_id).distinct()  # find all distinct devices
+    available_devices = []
+    table = None
+    for device in devices:
+        if device.device_id == int(device_id):  # only record devices with different id from booked device
+            pass
+        else:
+            available_devices.append({"device_id": device.device_id,
+                                      "device_name": Device.query.filter_by(id=device.device_id).first().name,
+                                      "booking_link": device.device_id})
+    if len(available_devices) != 0:
+        TableCls = create_table('TableCls', options=dict(classes=['table', 'table-bordered'], no_items='No Items')) \
+            .add_column('device_id', Col('Device ID')) \
+            .add_column('device_name', Col('Device Name')) \
+            .add_column('booking_link', LinkCol('Booking Link', 'appointment.calendar',
+                                                url_kwargs=dict(selected_device='booking_link')))
+        table = TableCls(available_devices)
+    return table
+
+
 @form.route('/new/<device_type>/<device_id>', methods=['GET', 'POST'])
 def new_log_form(device_type, device_id):
     device_type = str(device_type)
@@ -407,6 +431,7 @@ def new_log_form(device_type, device_id):
         user = User.query.filter_by(id=booked_event.user_id).first_or_404()
         # form to collect user email
         form = BookedForm()
+        table = generate_table(device_type, device_id)
         if form.validate_on_submit():
             email = form.email.data
             # if user's email is equal to booked email, then redirect to common login
@@ -414,7 +439,7 @@ def new_log_form(device_type, device_id):
                 return redirect(url_for('form.new_device_type_login', device_type=device_type,
                                         device_id=device_id, logs=logs))
         return render_template('log/booked.html', username=booked_event.name, start=start,
-                               end=end, device_id=device_id, logs=logs, form=form)
+                               end=end, device_id=device_id, logs=logs, form=form, table=table)
     else:
         return redirect(url_for('form.new_device_type_login', device_type=device_type, device_id=device_id, logs=logs))
 
@@ -458,6 +483,7 @@ def new_device_type_login():
             return render_template('log/log.html', device_id=device_id, form=form, logs=logs)
         else:
             form = generate_form('logout', table_description.columns)
+            device_table = generate_table(device_type, device_id)
             if form.validate_on_submit():
                 table_log = db.session.query(table).filter_by(device_id=device_id). \
                     order_by(desc(table.id)).first_or_404()
@@ -488,11 +514,13 @@ def new_device_type_login():
                     db.session.rollback()
                     db.session.flush()
                     print(e)
-            return render_template('log/log_logout.html', device_id=device_id, form=form, logs=logs)
+            return render_template('log/log_logout.html', device_id=device_id, form=form, logs=logs, table=device_table)
     elif device.status == 'Terminated':
-        return render_template('log/terminated.html')
+        device_table = generate_table(device_type, device_id)
+        return render_template('log/terminated.html', table=device_table)
     else:
         form = StateTransferForm()
+        device_table = generate_table(device_type, device_id)
         status = device.status
         if form.validate_on_submit():
             status_s = form.status.data
@@ -510,7 +538,7 @@ def new_device_type_login():
                     db.session.rollback()
                     db.session.flush()
                     print(e)
-        return render_template('log/state_transfer.html', status=status, form=form, logs=logs)
+        return render_template('log/state_transfer.html', status=status, form=form, logs=logs, table=device_table)
 
 
 def row2dict(row):
@@ -539,7 +567,7 @@ def row2ordereddict(row):
 
 def query_new_log(table, device_id, limit=5, offset=0):
     # display the records with limit number and offset
-    table_logs = db.session.query(table).filter_by(device_id=device_id).order_by(desc(table.id)).\
+    table_logs = db.session.query(table).filter_by(device_id=device_id).order_by(desc(table.id)). \
         limit(limit).offset(offset).all()
 
     # get device name
@@ -550,9 +578,9 @@ def query_new_log(table, device_id, limit=5, offset=0):
         # log = row2dict(table_log)
         log = row2ordereddict(table_log)
         log["start_time"] = log["start_time"].replace(tzinfo=utc).astimezone(tzchina).strftime(
-                "%Y/%m/%d-%H:%M:%S")
+            "%Y/%m/%d-%H:%M:%S")
         log["end_time"] = log["end_time"].replace(tzinfo=utc).astimezone(tzchina).strftime(
-                "%Y/%m/%d-%H:%M:%S") if table_log.end_time is not None else 'Inuse'
+            "%Y/%m/%d-%H:%M:%S") if table_log.end_time is not None else 'Inuse'
         log["device_name"] = device_name
         log.move_to_end('device_name', last=False)
         log_list.append(log)
