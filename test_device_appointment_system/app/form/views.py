@@ -67,6 +67,9 @@ def common_device_login():
             return render_template('log/log.html', device_id=device_id, form=form, logs=logs)
         else:
             form = EndForm()
+            device_usage_log = DeviceUsageLog.query.filter_by(device_id=device_id).order_by(
+                desc(DeviceUsageLog.id)).first_or_404()
+            username = device_usage_log.user_name
             if form.validate_on_submit():
                 status = form.status.data
                 s = {0: None, 1: 'Normal', 2: 'Broken', 3: 'Fixing', 4: 'Terminated'}
@@ -75,8 +78,6 @@ def common_device_login():
                 product = form.product.data
                 end_time = datetime.utcnow()
                 try:
-                    device_usage_log = DeviceUsageLog.query.filter_by(device_id=device_id).order_by(
-                        desc(DeviceUsageLog.id)).first()
                     device_usage_log.end_time = end_time
                     device_usage_log.product = product
                     device_usage_log.remarks = remarks
@@ -100,7 +101,7 @@ def common_device_login():
                 except:
                     db.session.rollback()
                     db.session.flush()
-            return render_template('log/log_logout.html', device_id=device_id, form=form, logs=logs)
+            return render_template('log/log_logout.html', device_id=device_id, form=form, logs=logs, username=username)
     elif device.status == 'Terminated':
         return render_template('log/terminated.html')
     else:
@@ -231,6 +232,9 @@ def glovebox_login():
             return render_template('log/log.html', device_id=device_id, form=form, logs=logs)
         else:
             form = GloveBoxEndForm()
+            gloveboxlog = GloveBoxLog.query.filter_by(device_id=device_id).order_by(
+                desc(GloveBoxLog.id)).first_or_404()
+            username = gloveboxlog.user_name
             if form.validate_on_submit():
                 status = form.status.data
                 s = {0: None, 1: 'Normal', 2: 'Broken', 3: 'Fixing', 4: 'Terminated'}
@@ -242,8 +246,6 @@ def glovebox_login():
                 product = form.product.data
                 remarks = form.remarks.data
                 try:
-                    gloveboxlog = GloveBoxLog.query.filter_by(device_id=device_id).order_by(
-                        desc(GloveBoxLog.id)).first()
                     gloveboxlog.h2o_after = h2o_after
                     gloveboxlog.o2_after = o2_after
                     gloveboxlog.ar_after = ar_after
@@ -414,9 +416,10 @@ def new_device_type_login():
         else:
             form = generate_form('logout', table_description.columns)
             device_table = generate_table(device_type, device_id)
+            table_log = db.session.query(table).filter_by(device_id=device_id). \
+                order_by(desc(table.id)).first_or_404()
+            username = table_log.username
             if form.validate_on_submit():
-                table_log = db.session.query(table).filter_by(device_id=device_id). \
-                    order_by(desc(table.id)).first_or_404()
                 if form.email.data != table_log.email:
                     return render_template('log/noauth.html')
                 s = {0: None, 1: 'Normal', 2: 'Broken', 3: 'Fixing', 4: 'Terminated'}
@@ -446,7 +449,8 @@ def new_device_type_login():
                     db.session.rollback()
                     db.session.flush()
                     print(e)
-            return render_template('log/log_logout.html', device_id=device_id, form=form, logs=logs, table=device_table)
+            return render_template('log/log_logout.html', device_id=device_id, form=form, logs=logs,
+                                   table=device_table, username=username)
     elif device.status == 'Terminated':
         device_table = generate_table(device_type, device_id)
         return render_template('log/terminated.html', table=device_table)
