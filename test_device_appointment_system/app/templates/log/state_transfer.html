@@ -4,6 +4,12 @@
 {% block title %}Log{% endblock %}
 
 {% block page_content %}
+<style>
+	b {
+	font-size: 16px;
+	color: red;
+	}
+</style>
 <div class="page-header">
 	<h2>The device is {{ status }} now.</h2>
 	<p>Please fill in the following log form for recording the device's new status</p>
@@ -14,7 +20,7 @@
 </div>
 <div class="container">
     {% if table %}
-    <h5>Other Available Devices of the same device type</h5>
+	<h5>Other <b>Available</b> Devices of the same device type</h5>
     {{ table }}
     {% else %}
     <h5>No Other Available Devices of the same device type</h5>

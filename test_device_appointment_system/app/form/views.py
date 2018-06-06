@@ -33,9 +33,11 @@ def check_booking(device_id):
     if device.device_inuse:
         return event
     elif event:
-        if event.start <= time - timedelta(seconds=1800):
+        if event.start <= time - timedelta(seconds=1800) and not event.is_finished:
             db.session.delete(event)
             db.session.commit()
+            return None
+        elif event.is_finished:
             return None
     return event
 
@@ -112,13 +114,16 @@ def common_device_login():
                         device.state_transfer = True
                     device.device_inuse = False
                     # delete appointment event to release booking check
+                    # use is_finished field instead of delete event to mark event is completed
                     event = AppointmentEvents.query.filter(
                         and_(AppointmentEvents.device_id == device_id,
                              AppointmentEvents.start <= end_time,
                              AppointmentEvents.end >= end_time)
                     ).first()
-                    if event:
-                        db.session.delete(event)
+                    if event and not event.is_finished:
+                        # db.session.delete(event)
+                        event.is_finished = True
+                        db.session.add(event)
                     db.session.commit()
                     return render_template('log/success.html')
                 except:
@@ -307,8 +312,10 @@ def glovebox_login():
                              AppointmentEvents.start <= end_time,
                              AppointmentEvents.end >= end_time)
                     ).first()
-                    if event:
-                        db.session.delete(event)
+                    if event and not event.is_finished:
+                        # db.session.delete(event)
+                        event.is_finished = True
+                        db.session.add(event)
                     db.session.commit()
                     return render_template('log/success.html')
                 except:
@@ -403,12 +410,15 @@ def generate_table(device_type, device_id):
     available_devices = []
     table = None
     for device in devices:
-        if device.device_id == int(device_id):  # only record devices with different id from booked device
+        device = Device.query.filter_by(id=device.device_id).first()
+        if device.id == int(device_id):  # only record devices with different id from booked device
+            pass
+        elif device.in_use:  # only record devices not used
             pass
         else:
-            available_devices.append({"device_id": device.device_id,
-                                      "device_name": Device.query.filter_by(id=device.device_id).first().name,
-                                      "booking_link": device.device_id})
+            available_devices.append({"device_id": device.id,
+                                      "device_name": device.name,
+                                      "booking_link": device.id})
     if len(available_devices) != 0:
         TableCls = create_table('TableCls', options=dict(classes=['table', 'table-bordered'], no_items='No Items')) \
             .add_column('device_id', Col('Device ID')) \
@@ -506,8 +516,10 @@ def new_device_type_login():
                              AppointmentEvents.start <= data["end_time"],
                              AppointmentEvents.end >= data["end_time"])
                     ).first()
-                    if event:
-                        db.session.delete(event)
+                    if event and not event.is_finished:
+                        # db.session.delete(event)
+                        event.is_finished = True
+                        db.session.add(event)
                     db.session.commit()
                     return render_template('log/success.html')
                 except Exception as e:

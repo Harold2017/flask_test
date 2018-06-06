@@ -161,6 +161,7 @@ class AppointmentEvents(db.Model):
     start = db.Column(db.DateTime(), default=datetime.utcnow)
     end = db.Column(db.DateTime())
     remark = db.Column(db.Text())
+    is_finished = db.Column(db.Boolean, default=False)
 
     def __repr__(self):
         return '<Event {0} on device {1} appointed by {2}>'.format(self.id, self.device_id, self.user_id)

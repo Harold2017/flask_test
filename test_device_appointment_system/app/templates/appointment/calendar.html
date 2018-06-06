@@ -240,7 +240,6 @@ $('#appoint').on('click', function(e){
 
 $('#cancel').on('click', function(e){
     let event_id = $('#event_id').val();
-    console.log(event_id);
     let url = "{{ url_for('api.remove_data', token=token, device_id=device_id) }}";
     let data = {"event_id": event_id};
     if (Number.isInteger(parseInt(event_id))) {
@@ -256,6 +255,7 @@ $('#cancel').on('click', function(e){
                 $('#calendar').fullCalendar('removeEvents', result["id"]);
             },
             error: function(xhr, type) {
+                alert(xhr.responseText);
             }
         });
     };

@@ -22,9 +22,18 @@ def return_data(device_id):
     ).all()
     response = []
     for event in events:
-        response.append({"title": event.name + ' Event ID: ' + str(event.id) + ' Remark: ' + str(event.remark),
-                         "start": event.start,
-                         "end": event.end, "id": event.id})
+        if not event.is_finished:
+            response.append({"title": event.name + ' Event ID: ' + str(event.id) + ' Remark: ' + str(event.remark),
+                             "start": event.start,
+                             "end": event.end,
+                             "id": event.id})
+        else:
+            response.append({"title": event.name + ' Event ID: ' + str(event.id) + ' Remark: ' + str(event.remark),
+                             "start": event.start,
+                             "end": event.end,
+                             "id": event.id,
+                             "color": 'black',
+                             "textColor": 'white'})
     return jsonify(response), 200
 
 
@@ -61,16 +70,24 @@ def add_data(token, device_id):
         and_(AppointmentEvents.user_id == user.id, AppointmentEvents.device_id == device_id,
              AppointmentEvents.start.between(start_date, end_date))
     ).all()
-    '''for event in events:
-        # print(event.start.date())
-        if start_date.time() == event.start.time() and start_date.time() <= event.start.time() <= event.end.time():
-            # print("Invalid")'''
-    if len(events) != 0:
-        return jsonify({"blocked": 3})
-    # print(title, start_date, end_date)
-    event_new = AppointmentEvents(name=title, user_id=user.id, device_id=device_id, start=start_date, end=end_date, remark=remark)
-    db.session.add(event_new)
-    db.session.commit()
+
+    if len(events) == 0:
+        event_new = AppointmentEvents(name=title, user_id=user.id, device_id=device_id, start=start_date, end=end_date,
+                                      remark=remark)
+        db.session.add(event_new)
+        db.session.commit()
+    else:
+        for event in events:
+            if not event.is_finished:
+                return jsonify({"blocked": 3})
+            else:
+                continue
+
+        event_new = AppointmentEvents(name=title, user_id=user.id, device_id=device_id, start=start_date, end=end_date,
+                                      remark=remark)
+        db.session.add(event_new)
+        db.session.commit()
+
     return jsonify({"blocked": 0, "id": event_new.id}), 200
 
 
@@ -89,9 +106,11 @@ def remove_data(token, device_id):
     r = request.get_json(force=True)
     event_id = r['event_id']
     event = AppointmentEvents.query.filter_by(id=event_id).first()
-    if user.id == event.user_id:
+    if user.id == event.user_id and not event.is_finished:
         db.session.delete(event)
         db.session.commit()
         return jsonify({"id": event.id}), 200
-    else:
+    elif user.id != event.user_id:
         return "No permission to access this event", 401
+    else:
+        return "You can Not remove a complete event", 401
