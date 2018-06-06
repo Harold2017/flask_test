@@ -413,7 +413,7 @@ def generate_table(device_type, device_id):
         device = Device.query.filter_by(id=device.device_id).first()
         if device.id == int(device_id):  # only record devices with different id from booked device
             pass
-        elif device.in_use:  # only record devices not used
+        elif device.device_inuse:  # only record devices not used
             pass
         else:
             available_devices.append({"device_id": device.id,
