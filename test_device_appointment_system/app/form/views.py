@@ -1,45 +1,16 @@
 from . import form
 from .forms import StartForm, EndForm, ItemTable, GloveBoxStartForm, \
-    GloveBoxEndForm, GloveItemTable, StateTransferForm, generate_form, BookedForm
-from flask import render_template, redirect, url_for, request, jsonify
-from datetime import datetime, timedelta
-import os
+    GloveBoxEndForm, GloveItemTable, StateTransferForm, BookedForm
+from flask import render_template, redirect, url_for, request
+from datetime import datetime
 from ..models import Device, DeviceUsageLog, GloveBoxLog, AppointmentEvents, User
 from .. import db
-from pytz import timezone
-from sqlalchemy import desc, Table, MetaData, inspect, and_
-from sqlalchemy.ext.automap import automap_base
-from flask_table import create_table, Col, LinkCol
-from collections import OrderedDict
+from sqlalchemy import desc, Table, MetaData, and_
+from flask_table import create_table, Col
+from .utils import check_booking, find_database_table, generate_table, tz_local, query_new_log, generate_form
 
-tzchina = timezone('Asia/Shanghai')
-utc = timezone('UTC')
 
-log_folder = os.path.abspath('app') + '\\form\\log\\'
 BASEURL = 'http://namihk.com'
-
-
-# check booking condition of the scanned QR-code device
-# if the device is booked during this time period, only user with booked email can login
-# if the booked user not login within 30 mins, the booking will be cancelled and the device will be open for login
-def check_booking(device_id):
-    time = datetime.utcnow()
-    event = AppointmentEvents.query.filter(
-        and_(AppointmentEvents.device_id == device_id,
-             AppointmentEvents.start <= time,
-             AppointmentEvents.end >= time)
-    ).first()
-    device = Device.query.filter_by(id=device_id).first()
-    if device.device_inuse:
-        return event
-    elif event:
-        if event.start <= time - timedelta(seconds=1800) and not event.is_finished:
-            db.session.delete(event)
-            db.session.commit()
-            return None
-        elif event.is_finished:
-            return None
-    return event
 
 
 @form.route('/<device_id>', methods=['GET', 'POST'])
@@ -48,8 +19,8 @@ def log(device_id):
     logs = BASEURL + "/form/device_log/" + str(device_id)
     booked_event = check_booking(device_id)
     if booked_event:
-        start = booked_event.start.replace(tzinfo=utc).astimezone(tzchina).strftime('%Y/%m/%d-%H:%M:%S')
-        end = booked_event.end.replace(tzinfo=utc).astimezone(tzchina).strftime('%Y/%m/%d-%H:%M:%S')
+        start = tz_local(booked_event.start)
+        end = tz_local(booked_event.end)
         user = User.query.filter_by(id=booked_event.user_id).first_or_404()
         # form to collect user email
         form = BookedForm()
@@ -78,7 +49,7 @@ def common_device_login():
                 s = {0: None, 1: 'Normal', 2: 'Broken', 3: 'Fixing', 4: 'Terminated'}
                 status = s.get(status)
                 details = form.details.data
-                start_time = datetime.utcnow()
+                # start_time = datetime.utcnow()
                 material = form.material.data
                 try:
                     device_usage_log = DeviceUsageLog(user_name=user, device_id=device_id, device_status=status,
@@ -153,27 +124,6 @@ def common_device_login():
         return render_template('log/state_transfer.html', status=status, form=form, logs=logs)
 
 
-'''def log(device_id):
-    form = LogForm()
-    if form.validate_on_submit():
-        device = form.name.data
-        user = form.user.data
-        status = form.status.data
-        s = {0: None, 1: 'Normal', 2: 'Broken'}
-        details = form.details.data
-        d = {'device': device,
-             'user': user,
-             'status': s.get(status),
-             'details': details,
-             'time': datetime.now().strftime('%Y-%m-%dT%H:%M:%S.%fZ')
-             }
-        with open(log_folder + 'log.txt', 'a') as f:
-            f.write(json.dumps(d))
-            f.write('\n')
-        return render_template('log/success.html')
-    return render_template('log/log.html', form=form)'''
-
-
 def query_device_log(device_id, limit=5, offset=0):
     d_logs = DeviceUsageLog.query.filter_by(device_id=device_id).order_by(desc(DeviceUsageLog.id)). \
         limit(limit).offset(offset).all()
@@ -184,12 +134,11 @@ def query_device_log(device_id, limit=5, offset=0):
              'device_id': d_log.device_id,
              'device_name': device_name,
              'device_status': d_log.device_status,
-             'start_time': d_log.start_time.replace(tzinfo=utc).astimezone(tzchina).strftime('%Y/%m/%d-%H:%M:%S'),
+             'start_time': tz_local(d_log.start_time),
              'material': d_log.material,
              'details': d_log.details,
 
-             'end_time': d_log.end_time.replace(tzinfo=utc).astimezone(tzchina).strftime(
-                 '%Y/%m/%d-%H:%M:%S') if d_log.end_time is not None else 'Inuse',
+             'end_time': tz_local(d_log.end_time) if d_log.end_time is not None else 'Inuse',
              'product': d_log.product,
              'remarks': d_log.remarks
              }
@@ -230,8 +179,8 @@ def glovebox(device_id):
     logs = BASEURL + "/form/glovebox/glovebox_log/" + str(device_id)
     booked_event = check_booking(device_id)
     if booked_event:
-        start = booked_event.start.replace(tzinfo=utc).astimezone(tzchina).strftime('%Y/%m/%d-%H:%M:%S')
-        end = booked_event.end.replace(tzinfo=utc).astimezone(tzchina).strftime('%Y/%m/%d-%H:%M:%S')
+        start = tz_local(booked_event.start)
+        end = tz_local(booked_event.end)
         user = User.query.filter_by(id=booked_event.user_id).first_or_404()
         # form to collect user email
         form = BookedForm()
@@ -355,7 +304,7 @@ def query_glovebox_log(device_id, limit=5, offset=0):
              'device_id': g_log.device_id,
              'device_name': device_name,
              'device_status': g_log.device_status,
-             'start_time': g_log.start_time.replace(tzinfo=utc).astimezone(tzchina).strftime('%Y/%m/%d-%H:%M:%S'),
+             'start_time': tz_local(g_log.start_time),
              'h2o_before': g_log.h2o_before,
              'o2_before': g_log.o2_before,
              'ar_before': g_log.ar_before,
@@ -363,8 +312,7 @@ def query_glovebox_log(device_id, limit=5, offset=0):
              'material': g_log.material,
              'details': g_log.details,
 
-             'end_time': g_log.end_time.replace(tzinfo=utc).astimezone(tzchina).strftime(
-                 '%Y/%m/%d-%H:%M:%S') if g_log.end_time is not None else 'Inuse',
+             'end_time': tz_local(g_log.end_time) if g_log.end_time is not None else 'Inuse',
              'h2o_after': g_log.h2o_after,
              'o2_after': g_log.o2_after,
              'ar_after': g_log.ar_after,
@@ -402,33 +350,6 @@ def glovebox_log(device_id):
                            url=url_for('form.glovebox_log', device_id=device_id))
 
 
-def generate_table(device_type, device_id):
-    Base = automap_base()
-    Base.prepare(db.engine, reflect=True)  # use automap of sqlalchemy to get table's corresponding class model
-    table = getattr(Base.classes, device_type, None)  # getattr to access attribute like Base.classes.device_type
-    devices = db.session.query(table.device_id).distinct()  # find all distinct devices
-    available_devices = []
-    table = None
-    for device in devices:
-        device = Device.query.filter_by(id=device.device_id).first()
-        if device.id == int(device_id):  # only record devices with different id from booked device
-            pass
-        elif device.device_inuse:  # only record devices not used
-            pass
-        else:
-            available_devices.append({"device_id": device.id,
-                                      "device_name": device.name,
-                                      "booking_link": device.id})
-    if len(available_devices) != 0:
-        TableCls = create_table('TableCls', options=dict(classes=['table', 'table-bordered'], no_items='No Items')) \
-            .add_column('device_id', Col('Device ID')) \
-            .add_column('device_name', Col('Device Name')) \
-            .add_column('booking_link', LinkCol('Booking Link', 'appointment.calendar',
-                                                url_kwargs=dict(selected_device='booking_link')))
-        table = TableCls(available_devices)
-    return table
-
-
 @form.route('/new/<device_type>/<device_id>', methods=['GET', 'POST'])
 def new_log_form(device_type, device_id):
     device_type = str(device_type)
@@ -436,8 +357,8 @@ def new_log_form(device_type, device_id):
     logs = BASEURL + "/form/new/" + device_type + '/log/' + str(device_id)
     booked_event = check_booking(device_id)
     if booked_event:
-        start = booked_event.start.replace(tzinfo=utc).astimezone(tzchina).strftime('%Y/%m/%d-%H:%M:%S')
-        end = booked_event.end.replace(tzinfo=utc).astimezone(tzchina).strftime('%Y/%m/%d-%H:%M:%S')
+        start = tz_local(booked_event.start)
+        end = tz_local(booked_event.end)
         user = User.query.filter_by(id=booked_event.user_id).first_or_404()
         # form to collect user email
         form = BookedForm()
@@ -460,11 +381,10 @@ def new_device_type_login():
     device_id = request.args["device_id"]
     logs = request.args["logs"]
     device = Device.query.filter_by(id=device_id).first()
+
     table_description = Table(device_type, MetaData(), autoload=True, autoload_with=db.engine)  # get table description
 
-    Base = automap_base()
-    Base.prepare(db.engine, reflect=True)  # use automap of sqlalchemy to get table's corresponding class model
-    table = getattr(Base.classes, device_type, None)  # getattr to access attribute like Base.classes.device_type
+    table = find_database_table(device_type)
     if device.status == 'Normal':
         if device.device_inuse is False:
             form = generate_form('login', table_description.columns)
@@ -553,59 +473,11 @@ def new_device_type_login():
         return render_template('log/state_transfer.html', status=status, form=form, logs=logs, table=device_table)
 
 
-def row2dict(row):
-    dict = {column.key: getattr(row, column.key) for column in inspect(row).mapper.column_attrs}
-    try:
-        del dict["email"]
-        del dict["id"]
-    except KeyError as e:
-        print("No such key: '%s'" % e)
-    finally:
-        return dict
-
-
-def row2ordereddict(row):
-    result = OrderedDict()
-    for column in inspect(row).mapper.column_attrs:
-        result[column.key] = getattr(row, column.key)
-    try:
-        del result["email"]
-        del result["id"]
-    except KeyError as e:
-        print("No such key: '%s'" % e)
-    finally:
-        return result
-
-
-def query_new_log(table, device_id, limit=5, offset=0):
-    # display the records with limit number and offset
-    table_logs = db.session.query(table).filter_by(device_id=device_id).order_by(desc(table.id)). \
-        limit(limit).offset(offset).all()
-
-    # get device name
-    device_name = Device.query.filter_by(id=device_id).first().name
-
-    log_list = []
-    for table_log in table_logs:
-        # log = row2dict(table_log)
-        log = row2ordereddict(table_log)
-        log["start_time"] = log["start_time"].replace(tzinfo=utc).astimezone(tzchina).strftime(
-            "%Y/%m/%d-%H:%M:%S")
-        log["end_time"] = log["end_time"].replace(tzinfo=utc).astimezone(tzchina).strftime(
-            "%Y/%m/%d-%H:%M:%S") if table_log.end_time is not None else 'Inuse'
-        log["device_name"] = device_name
-        log.move_to_end('device_name', last=False)
-        log_list.append(log)
-    return log_list
-
-
 @form.route('/new/<device_type>/log/<device_id>', methods=['GET', 'POST'])
 def new_log(device_type, device_id):
     device_type = str(device_type)
     device_id = int(device_id)
-    Base = automap_base()
-    Base.prepare(db.engine, reflect=True)  # use automap of sqlalchemy to get table's corresponding class model
-    table = getattr(Base.classes, device_type, None)  # getattr to access attribute like Base.classes.device_type
+    table = find_database_table(device_type)
     try:
         offset = request.get_json(force=True).get("offset")
     except:

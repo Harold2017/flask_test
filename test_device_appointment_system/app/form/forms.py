@@ -1,15 +1,8 @@
 from flask_wtf import FlaskForm
 from wtforms import StringField, TextAreaField, SelectField, \
-    SubmitField, FloatField, IntegerField, BooleanField
-from wtforms.fields.html5 import DateTimeField
+    SubmitField, FloatField
 from wtforms.validators import Required, Length, Email
 from flask_table import Table, Col
-from datetime import datetime
-
-from pytz import timezone
-
-tzchina = timezone('Asia/Shanghai')
-utc = timezone('UTC')
 
 
 class StartForm(FlaskForm):
@@ -81,8 +74,6 @@ class Item(object):
     def __init__(self, user_name, device_id, device_name, device_status, start_time, end_time, details, remarks):
         self.user_name = user_name
         self.device_id = device_id
-        # self.device_status = {0: None, 1: 'Normal', 2: 'Broken'}.get(device_status)
-        # self.log_time = log_time.replace(tzinfo=utc).astimezone(tzchina).strftime('%Y/%m/%d-%H:%M:%S')
         self.details = details
         # Username	Device_id	Device_status	Log_time	Details
         # Ivan Lau	15	        True	        2018-03-01 07:08:26
@@ -123,72 +114,6 @@ class StateTransferForm(FlaskForm):
     submit = SubmitField('Submit')
 
 
-fields = {'INT': IntegerField,
-          'VAR': StringField,
-          'TEX': TextAreaField,
-          'TIN': BooleanField,
-          'DAT': DateTimeField,
-          'FLO': FloatField
-          }
-
-
 class BookedForm(FlaskForm):
     email = StringField('Please input your booking email', validators=[Required(), Length(1, 64), Email()])
     submit = SubmitField('Submit')
-
-
-def generate_form(form_type, columns, **kwargs):
-    """
-    generate login / logout form according to form type and table columns
-    :param form_type: str -> login / logout
-    :param columns: table columns from sqlalchemy table description
-    :param kwargs: may extend some features later
-    :return: wtforms' form object
-    """
-    class BaseForm(FlaskForm):
-        """
-        base form with common username, device_status fields
-        """
-        username = StringField('User name', validators=[Required(), Length(1, 64)])
-        email = StringField('Email', validators=[Required(), Length(1, 64), Email()])
-        device_status = SelectField('Device status', coerce=int,
-                                    choices=[(0, 'None'), (1, 'Normal'), (2, 'Broken'), (3, 'Fixing'),
-                                             (4, 'Terminated')],
-                                    default=0,
-                                    validators=[Required()])
-
-    for c in list(columns)[5:]:  # ignore id, device_id, device_status, username and email fields
-        field = fields.get(str(c.type)[:3])
-        if str(c.type)[:3] == 'DAT':
-            # field = field(c.name.capitalize(), format="%Y-%m-%d %H:%M", default=datetime.utcnow().replace(
-            # tzinfo=utc).astimezone(tzchina))
-            continue
-        elif form_type == 'login' and (str(c.name) == 'product' or str(c.name) == 'remarks'):  # login form
-            continue
-        elif form_type == 'logout' and (str(c.name) == 'material' or str(c.name) == 'details'):  # logout form
-            continue
-        else:  # Text field (details / remarks are not required)
-            field = field(c.name.capitalize(), validators=[Required()] if str(c.type)[:3] != 'TEX' else None)
-        setattr(BaseForm, c.name, field)
-
-    class Form(BaseForm):
-        """
-        add submit filed
-        """
-        submit = SubmitField('Submit')
-
-        def __init__(self, *args, **kwargs):
-            super(Form, self).__init__(*args, **kwargs)
-
-    return Form(**kwargs)
-
-
-'''def generate_table(dict_attr):
-
-    class GeneralTable(Table):
-        classes = ['table', 'table-bordered']
-
-    for key in dict_attr.keys():
-        setattr(GeneralTable, key, Col(key.capitalize()))
-
-    return GeneralTable'''
