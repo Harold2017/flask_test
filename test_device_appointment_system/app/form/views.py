@@ -272,7 +272,7 @@ def glovebox_login():
                 except:
                     db.session.rollback()
                     db.session.flush()
-            return render_template('log/log_logout.html', device_id=device_id, form=form, logs=logs)
+            return render_template('log/log_logout.html', device_id=device_id, form=form, logs=logs, username=username)
     elif device.status == 'Terminated':
         return render_template('log/terminated.html')
     else:
