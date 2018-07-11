@@ -1,7 +1,7 @@
 from flask_wtf import FlaskForm
 from wtforms import StringField, TextAreaField, SelectField, \
     SubmitField, FloatField
-from wtforms.validators import Required, Length, Email
+from wtforms.validators import Required, Length, Email, Regexp
 from flask_table import Table, Col
 
 
@@ -115,5 +115,5 @@ class StateTransferForm(FlaskForm):
 
 
 class BookedForm(FlaskForm):
-    email = StringField('Please input your booking email', validators=[Required(), Length(1, 64), Email()])
+    email = StringField('Please input your booking email', validators=[Required(), Length(1, 64), Email(), Regexp(regex=r'\s+', message="Remove space!")])
     submit = SubmitField('Submit')
