@@ -43,6 +43,8 @@ def calendar():
     selected_device = request.args['selected_device']
     # print(selected_device)
     # print(url_for('api.return_data', device_id=selected_device))
+    if len(selected_device) == 0:
+        return render_template('404.html')
     user = User.query.filter_by(id=current_user.id).first()
     devices = find_devices(current_user)
     if len(devices) == 0:

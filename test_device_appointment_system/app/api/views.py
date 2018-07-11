@@ -67,7 +67,7 @@ def add_data(token, device_id):
     # print(type(title))
     # print(title == '')
     events = AppointmentEvents.query.filter(
-        and_(AppointmentEvents.user_id == user.id, AppointmentEvents.device_id == device_id,
+        and_(AppointmentEvents.device_id == device_id,
              AppointmentEvents.start.between(start_date, end_date))
     ).all()
 
