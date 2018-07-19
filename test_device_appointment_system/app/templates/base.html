@@ -55,7 +55,7 @@
                 </li>
                 {% else %}
                 <li><a href="{{ url_for('auth.login') }}">Log In</a></li>
-                <li><a href="{{ url_for('auth.reset') }}">Reset Password</a></li>
+                <li><a href="{{ url_for('auth.password_reset_request') }}">Reset Password</a></li>
                 {% endif %}
             </ul>
         </div>
