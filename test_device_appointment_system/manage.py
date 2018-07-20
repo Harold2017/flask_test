@@ -69,6 +69,14 @@ def check_device_state():
                     db.session.flush()
 
 
+def send_alert_email():
+    try:
+        send_email(EMAIL_RECEIVER, 'Glovebox Regeneration',
+                   'log/email/glovebox_regeneration')
+    except Exception as e:
+        print(str(e))
+
+
 def job_listener(event):
     if event.exception:
         joblog = JobLog(job_name=event.job_id, excute_status=False, result=event.exception)
@@ -128,6 +136,8 @@ def deploy():
 scheduler.add_job(func=check_log, id='check_log', trigger='interval', hours=1)
 
 scheduler.add_job(func=check_device_state, id='check_device_state', trigger='interval', hours=1)
+
+scheduler.add_job(func=send_alert_email, id='send_alert_email', trigger='cron', day=28)
 
 scheduler.add_listener(job_listener, events.EVENT_JOB_EXECUTED | events.EVENT_JOB_MISSED | events.EVENT_JOB_ERROR)
 
