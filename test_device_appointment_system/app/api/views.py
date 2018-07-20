@@ -43,7 +43,7 @@ def add_data(token, device_id):
         return "No valid token", 401
     if device_id is None:
         return "No valid device ID", 401
-    user = User.query.filter_by(avatar_hash=token).first()
+    user = User.query.filter_by(avatar_hash=token).first_or_404()
     # devices = user.devices.all()
     device_id = int(device_id)
     # not available?
@@ -105,7 +105,7 @@ def remove_data(token, device_id):
         return "No permission to access {0}".format(device_id), 401
     r = request.get_json(force=True)
     event_id = r['event_id']
-    event = AppointmentEvents.query.filter_by(id=event_id).first()
+    event = AppointmentEvents.query.filter_by(id=event_id).first_or_404()
     if user.id == event.user_id and not event.is_finished:
         db.session.delete(event)
         db.session.commit()
