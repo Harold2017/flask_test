@@ -276,7 +276,7 @@ def device_inuse_json_data():
 def device_inuse_receive():
     data = request.get_json(force=True)["data"]
     device_id = int(data[0])
-    device = Device.query.filter_by(device_id=device_id).first()
+    device = Device.query.filter_by(id=device_id).first()
     device.device_inuse = False
     db.session.commit()
     return url_for('main.device_inuse')
