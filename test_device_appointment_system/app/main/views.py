@@ -266,7 +266,7 @@ def device_inuse_json_data():
         devices.append({
             'id': device.id,
             'name': device.name,
-            'current_user': getattr(log, re.findall('user.name', ''.join(log.__table__.columns.keys()))[0]) if log is not None,
+            'current_user': getattr(log, re.findall('user.name', ''.join(log.__table__.columns.keys()))[0]),
             'start_time': tz_local(log.start_time),
         })
     return jsonify({"data": devices})
