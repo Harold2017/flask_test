@@ -9,9 +9,26 @@ from .forms import EditUserForm, Item, ItemTable, EditDeviceForm
 from ..QRcode.QRcode import qr_generator
 from flask_sqlalchemy import get_debug_queries
 from sqlalchemy.ext.automap import automap_base
+from sqlalchemy import desc
+import re
+from datetime import datetime
+from pytz import timezone
 
 
 BASEURL = 'http://namihk.com'
+tzchina = timezone('Asia/Shanghai')
+utc = timezone('UTC')
+
+
+def tz_local(_datetime: datetime) -> str:
+    """
+    timezone transfer function, from utc to local
+    meanwhile format it
+    :param datetime _datetime:
+    :return: string local datetime
+    """
+    return _datetime.replace(tzinfo=utc).astimezone(tzchina).strftime(
+            "%Y/%m/%d-%H:%M:%S")
 
 
 def find_users(device):
@@ -231,3 +248,59 @@ def edit_device_type():
             flash('Error occurs: ', str(e))
             return str(e)
     return render_template('/edit/edit_device_type.html')
+
+
+@main.route('/device_inuse', methods=['GET', 'POST'])
+@login_required
+@admin_required
+def device_inuse():
+    return render_template('/edit/reset_device_inuse.html')
+
+
+@main.route('/device_inuse_json_data', methods=['GET'])
+def device_inuse_json_data():
+    inuse_devices = Device.query.filter_by(device_inuse=True).all()
+    devices = []
+    for device in inuse_devices:
+        log = find_latest_log_with_certain_device_id(device.id)
+        devices.append({
+            'id': device.id,
+            'name': device.name,
+            'current_user': getattr(log, re.findall('user.name', ''.join(log.__table__.columns.keys()))[0]),
+            'start_time': tz_local(log.start_time),
+        })
+    return jsonify({"data": devices})
+
+
+@main.route('/device_inuse_receive', methods=['POST'])
+def device_inuse_receive():
+    data = request.get_json(force=True)["data"]
+    device_id = int(data[0])
+    device = Device.query.filter_by(device_id=device_id).first()
+    device.device_inuse = False
+    db.session.commit()
+    return url_for('main.device_inuse')
+
+
+def find_latest_log_with_certain_device_id(device_id):
+    devicetypes = DeviceType.query.all()
+    Base = automap_base()
+    Base.prepare(db.engine,
+                 reflect=True)  # use automap of sqlalchemy to get table's corresponding class model
+    if DeviceUsageLog.query.filter_by(device_id=device_id).first():
+        log = DeviceUsageLog.query.filter_by(device_id=device_id).order_by(desc(DeviceUsageLog.id)).first()
+    elif GloveBoxLog.query.filter_by(device_id=device_id).first():
+        log = GloveBoxLog.query.filter_by(device_id=device_id).order_by(desc(GloveBoxLog.id)).first()
+    else:
+        log = None
+        for devicetype in devicetypes:
+            table = getattr(Base.classes, devicetype.type,
+                            None)  # getattr to access attribute like Base.classes.device_type
+            query = db.session.query(table).filter_by(device_id=device_id).first()
+            if query:
+                # device_type = devicetype.type
+                log = db.session.query(table).fltery_by(device_id=device_id).order_by(desc(table.id)).first()
+                break
+            else:
+                continue
+    return log

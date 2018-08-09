@@ -1,0 +1,79 @@
+{% extends "base.html" %}
+{% import "bootstrap/wtf.html" as wtf %}
+
+{% block title %}Log{% endblock %}
+
+{% block page_content %}
+<script type="text/javascript" language="javascript" src="https://code.jquery.com/jquery-3.3.1.js"></script>
+<script type="text/javascript" language="javascript" src="https://cdn.datatables.net/1.10.18/js/jquery.dataTables.min.js"></script>
+<link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.10.18/css/jquery.dataTables.min.css">
+
+<div class="page-header">
+    <h2>Separator</h2>
+</div>
+<table id="table_device_inuse" class="table table-striped table-bordered" style="width:100%">
+    <thead>
+        <tr>
+            <th>ID</th>
+            <th>Name</th>
+            <th>Current User</th>
+            <th>Start Time</th>
+        </tr>
+    </thead>
+</table>
+<br/>
+<input id="button_submit" type="submit" value="Reset" class="btn btn-default" disabled/>&nbsp;&nbsp;
+
+
+<script>
+    $("#table_separator").DataTable({
+    ajax:"{{ url_for('main.device_inuse_json_data') }}",
+    columns:[
+        {data: "id"},
+        {data: "name"},
+        {data: "current_user"},
+        {data: "start_time"}
+    ]
+    });
+</script>
+
+<script>
+    var table = $('#table_device_inuse').DataTable();
+    $('#table_device_inuse tbody').on( 'click', 'tr', function () {
+        if ( $(this).hasClass('selected') ) {
+            $(this).removeClass('selected');
+            $('#button_submit').attr("disabled", "disabled");
+        }
+        else {
+            table.$('tr.selected').removeClass('selected');
+            $(this).addClass('selected');
+            $('#button_submit').removeAttr("disabled");
+        }
+    } );
+    $('#button_submit').click( function () {
+        var data = JSON.stringify({
+        "data":
+        [
+        table.$('tr.selected').find('td:eq(0)').text()
+        ]
+        });
+        $('#button_submit').attr("disabled", "disabled");
+        $.ajax({
+            url: "{{ url_for('main.device_inuse_receive') }}",
+            contentType: "application/json; charset=utf-8",
+            type: 'POST',
+            data: data,
+            success: function (url) {
+                alert('Reset!');
+                location.href = url;
+            }
+        });
+    });
+</script>
+
+<br/>
+{% endblock %}
+
+{% block scripts %}
+{{ super() }}
+{% endblock %}
