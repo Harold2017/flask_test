@@ -299,7 +299,7 @@ def find_latest_log_with_certain_device_id(device_id):
             query = db.session.query(table).filter_by(device_id=device_id).first()
             if query:
                 # device_type = devicetype.type
-                log = db.session.query(table).fltery_by(device_id=device_id).order_by(desc(table.id)).first()
+                log = db.session.query(table).filter_by(device_id=device_id).order_by(desc(table.id)).first()
                 break
             else:
                 continue
