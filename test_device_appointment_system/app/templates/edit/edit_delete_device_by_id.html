@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+{% import "bootstrap/wtf.html" as wtf %}
+
+{% block title %}Delete Device{% endblock %}
+
+{% block page_content %}
+
+{% if log %}
+<div class="container">
+    <h3>Latest log for this device:</h3>
+    <table class="table table-striped">
+        <thead>
+        <tr>
+            <th>Attribute Name</th>
+            <th>Attribute Value</th>
+        </tr>
+        </thead>
+        <tbody>
+        {% for key, value in log.items() %}
+            <tr>
+                <td> {{ key }} </td>
+                <td> {{ value }} </td>
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% else %}
+<div class="container">
+    <p>No log for this device yet.</p>
+</div>
+{% endif %}
+
+<div class="alert alert-danger">
+    <strong>Warning!</strong> Are you sure to delete this device?
+    <form method="post" action="{{ url_for('main.device_delete', device_id=device_id) }}">
+        <input type="submit" class="btn btn-danger" value="Confirm" />
+        <button type="button" class="btn btn-info" onclick="closeWindow()">Cancel</button>
+    </form>
+    <script>
+        function closeWindow() {
+            close();
+        }
+    </script>
+</div>
+
+{% endblock %}

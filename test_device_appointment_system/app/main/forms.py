@@ -47,3 +47,12 @@ class Item(object):
         self.details = details
         # ud = db.session.query(user_device).filter_by(device_id=id).all()
         # self.users = ud
+
+
+class DeleteDeviceTypeForm(FlaskForm):
+    device_type = SelectField('Device type')
+    submit = SubmitField('Submit')
+
+    def __init__(self, device_types, *args, **kwargs):
+        super(DeleteDeviceTypeForm, self).__init__(*args, **kwargs)
+        self.device_type.choices = [(device["type"], device["type"]) for device in device_types]

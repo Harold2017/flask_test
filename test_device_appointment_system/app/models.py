@@ -65,6 +65,7 @@ class Device(db.Model):
     device_inuse = db.Column(db.Boolean, default=False)
     # add state_transfer to determine whether the device's status is changed
     state_transfer = db.Column(db.Boolean, default=False)
+    disable = db.Column(db.Boolean, default=False)
     '''def __init__(self):
         keygen = KeyGenerator()
         key = keygen.generator()

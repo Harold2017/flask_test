@@ -5,7 +5,7 @@ from ..models import User, Device, Permission, user_device, AnonymousUser, \
     DeviceUsageLog, GloveBoxLog, DeviceType, SlowQuery
 from flask_login import login_required, current_user
 from ..decorators import admin_required, permission_required
-from .forms import EditUserForm, Item, ItemTable, EditDeviceForm
+from .forms import EditUserForm, Item, ItemTable, EditDeviceForm, DeleteDeviceTypeForm
 from ..QRcode.QRcode import qr_generator
 from flask_sqlalchemy import get_debug_queries
 from sqlalchemy.ext.automap import automap_base
@@ -44,8 +44,9 @@ def find_devices(user):
     uds = db.session.query(user_device).filter_by(user_id=user.id).all()
     devices = []
     for ud in uds:
-        device = Device.query.filter_by(id=ud.device_id).first()
-        devices.append({"id": device.id, "name": device.name})
+        device = Device.query.filter_by(id=ud.device_id).filter_by(disable=False).first()
+        if device:
+            devices.append({"id": device.id, "name": device.name})
     return devices
 
 
@@ -97,7 +98,7 @@ def index():
 @login_required
 # @admin_required
 def edit():
-    devices = Device.query.all()
+    devices = Device.query.filter_by(disable=False).all()
     users = User.query.all()
     # ud = db.session.query(user_device).filter_by(device_id=devices[0].id).all()
     # print(ud[0].user_id)
@@ -121,11 +122,12 @@ def edit():
             for devicetype in devicetypes:
                 table = getattr(Base.classes, devicetype.type,
                                 None)  # getattr to access attribute like Base.classes.device_type
-                query = db.session.query(table).filter_by(device_id=device.id).first()
-                if query:
-                    device_type = devicetype.type
-                    logs = BASEURL + "/form/new/" + device_type + '/log/' + str(device.id)
-                    break
+                if table:
+                    query = db.session.query(table).filter_by(device_id=device.id).first()
+                    if query:
+                        device_type = devicetype.type
+                        logs = BASEURL + "/form/new/" + device_type + '/log/' + str(device.id)
+                        break
                 else:
                     continue
 
@@ -135,7 +137,8 @@ def edit():
                             "details": device.details,
                             "img_path": img_path,
                             "users": find_users(device),
-                            "logs": logs
+                            "logs": logs,
+                            "delete_link": url_for('main.device_delete', device_id=device.id)
                             })
 
     user_list = []
@@ -229,7 +232,8 @@ def edit_device_type():
                           "device_status VARCHAR(32) DEFAULT 'Normal'",
                           'username VARCHAR(64)', 'email VARCHAR(64)',
                           'start_time DATETIME DEFAULT CURRENT_TIMESTAMP',
-                          'end_time DATETIME ON UPDATE CURRENT_TIMESTAMP']
+                          'end_time DATETIME ON UPDATE CURRENT_TIMESTAMP',
+                          'remarks TEXT']
             for field in r:
                 field_list.append(field['field_name'] + ' ' + field['field_type'])
             # print(field_list)
@@ -262,7 +266,7 @@ def device_inuse_json_data():
     inuse_devices = Device.query.filter_by(device_inuse=True).all()
     devices = []
     for device in inuse_devices:
-        log = find_latest_log_with_certain_device_id(device.id)
+        log, _ = find_latest_log_with_certain_device_id(device.id)
         devices.append({
             'id': device.id,
             'name': device.name,
@@ -278,6 +282,13 @@ def device_inuse_receive():
     device_id = int(data[0])
     device = Device.query.filter_by(id=device_id).first()
     device.device_inuse = False
+    log, _ = find_latest_log_with_certain_device_id(device_id)
+    try:
+        log.remarks = 'Not logout'
+    except Exception as e:
+        db.session.rollback()
+        db.session.flush()
+        print(e)
     db.session.commit()
     return url_for('main.device_inuse')
 
@@ -287,20 +298,78 @@ def find_latest_log_with_certain_device_id(device_id):
     Base = automap_base()
     Base.prepare(db.engine,
                  reflect=True)  # use automap of sqlalchemy to get table's corresponding class model
+
+    table_found = None
+
     if DeviceUsageLog.query.filter_by(device_id=device_id).first():
         log = DeviceUsageLog.query.filter_by(device_id=device_id).order_by(desc(DeviceUsageLog.id)).first()
+        table_found = DeviceUsageLog
     elif GloveBoxLog.query.filter_by(device_id=device_id).first():
         log = GloveBoxLog.query.filter_by(device_id=device_id).order_by(desc(GloveBoxLog.id)).first()
+        table_found = GloveBoxLog
     else:
         log = None
         for devicetype in devicetypes:
             table = getattr(Base.classes, devicetype.type,
                             None)  # getattr to access attribute like Base.classes.device_type
-            query = db.session.query(table).filter_by(device_id=device_id).first()
-            if query:
-                # device_type = devicetype.type
-                log = db.session.query(table).filter_by(device_id=device_id).order_by(desc(table.id)).first()
-                break
+            if table:
+                query = db.session.query(table).filter_by(device_id=device_id).first()
+                if query:
+                    log = db.session.query(table).filter_by(device_id=device_id).order_by(desc(table.id)).first()
+                    table_found = table
+                    break
             else:
                 continue
-    return log
+    return log, table_found
+
+
+@main.route('/device/<device_id>/delete', methods=['GET', 'POST'])
+@login_required
+@admin_required
+def device_delete(device_id):
+    device_id = int(device_id)
+    log, table = find_latest_log_with_certain_device_id(device_id)
+    if log:
+        log = log.__dict__
+    '''
+    for col in able.__table__.columns:
+        info.append({
+            'ColumnName': col.key,
+            'ColumnDescription': col.description
+        })
+    '''
+
+    if request.method == 'POST':
+        if table:
+            db.session.query(table).filter_by(device_id=device_id).delete()  # clear all logs
+        device = Device.query.filter_by(id=device_id).first()
+        device.disable = True  # disable device, not delete due to foreign key with users
+        db.session.commit()
+        flash('Device {} has been deleted successfully!'.format(device.name))
+        return redirect(url_for('main.edit'))
+    return render_template('/edit/edit_delete_device_by_id.html', log=log, device_id=device_id)
+
+
+@main.route('/device_type/delete', methods=['GET', 'POST'])
+@login_required
+@admin_required
+def delete_device_type():
+    device_types = find_device_types()
+    Base = automap_base()
+    Base.prepare(db.engine, reflect=True)
+
+    form = DeleteDeviceTypeForm(device_types)
+
+    if form.validate_on_submit():
+        device_type = form.device_type.data
+        table = getattr(Base.classes, device_type, None)
+        try:
+            table.__table__.drop(db.engine)
+            DeviceType.query.filter_by(type=device_type).delete()
+            flash('Device type {} has been deleted successfully!'.format(device_type))
+            return redirect(url_for('main.edit'))
+        except Exception as e:
+            db.session.rollback()
+            db.session.flush()
+            print(e)
+    return render_template('/edit/edit_delete_device_type.html', form=form)
