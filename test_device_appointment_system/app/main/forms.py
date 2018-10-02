@@ -51,7 +51,7 @@ class Item(object):
 
 class DeleteDeviceTypeForm(FlaskForm):
     device_type = SelectField('Device type')
-    submit = SubmitField('Submit')
+    submit = SubmitField('Delete Confirm')
 
     def __init__(self, device_types, *args, **kwargs):
         super(DeleteDeviceTypeForm, self).__init__(*args, **kwargs)
