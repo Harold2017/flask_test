@@ -145,7 +145,9 @@ def edit():
     for user in users:
         user_list.append({"id": user.id,
                           "name": user.name,
-                          "devices": find_devices(user)})
+                          "devices": find_devices(user),
+                          "delete_link": url_for('main.user_delete', user_id=user.id)
+                          })
 
     return render_template('edit/edit.html', devices=device_list, users=user_list)
 
@@ -373,3 +375,35 @@ def delete_device_type():
             db.session.flush()
             print(e)
     return render_template('/edit/edit_delete_device_type.html', form=form)
+
+
+@main.route('/user/<user_id>/delete', methods=['GET', 'POST'])
+@login_required
+@admin_required
+def user_delete(user_id):
+    user_id = int(user_id)
+    user = User.query.filter_by(id=user_id).first()
+
+    user_dict = {
+        "id": user.id,
+        "name": user.name,
+        "email": user.email,
+        "role": user.role_id,
+        "devices": find_devices(user)
+    }
+
+    if request.method == 'POST':
+
+        user.devices.clear()
+        db.session.add(user)
+
+        try:
+            User.query.filter_by(id=user_id).delete()
+            db.session.commit()
+        except Exception as e:
+            db.session.rollback()
+            db.session.flush()
+
+        return redirect(url_for('main.edit'))
+
+    return render_template('/edit/edit_delete_user.html', user=user_dict)

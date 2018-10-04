@@ -47,6 +47,7 @@
             <th>ID</th>
             <th>Name</th>
             <th>Devices</th>
+            <th>Delete</th>
         <tr>
     </thead>
     <tbody>
@@ -55,6 +56,7 @@
             <td>{{ user.id }}</td>
             <td>{{ user.name }}</td>
             <td>{{ user.devices }}</td>
+            <td><a href={{ user.delete_link }} target="_blank">Delete</a></td>
         </tr>
         {% endfor %}
     </tbody>
