@@ -40,6 +40,7 @@ def main():
                 username = log.user_name
             else:
                 log = None
+                username = None
                 for devicetype in devicetypes:
                     table = getattr(Base.classes, devicetype.type,
                                     None)  # getattr to access attribute like Base.classes.device_type
@@ -48,16 +49,18 @@ def main():
                         break
                     else:
                         continue
-                username = log.username
-            d_list.append({
-                "user_name": username,
-                "device_id": log.device_id,
-                "device_name": d.name,
-                "device_status": log.device_status,
-                "start_time": log.start_time.replace(tzinfo=utc).astimezone(tzchina).strftime('%Y/%m/%d-%H:%M:%S'),
-                "material": log.material,
-                "details": log.details
-            })
+                if log:
+                    username = log.username
+            if log:
+                d_list.append({
+                    "user_name": username,
+                    "device_id": log.device_id,
+                    "device_name": d.name,
+                    "device_status": log.device_status,
+                    "start_time": log.start_time.replace(tzinfo=utc).astimezone(tzchina).strftime('%Y/%m/%d-%H:%M:%S'),
+                    "material": getattr(log, 'material', 'NA'),
+                    "details": log.details
+                })
     # print(d_list)
     if len(d_list) == 0:
         inuse_table = None

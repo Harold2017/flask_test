@@ -269,12 +269,13 @@ def device_inuse_json_data():
     devices = []
     for device in inuse_devices:
         log, _ = find_latest_log_with_certain_device_id(device.id)
-        devices.append({
-            'id': device.id,
-            'name': device.name,
-            'current_user': getattr(log, re.findall('user.*name', ''.join(log.__table__.columns.keys()))[0]),
-            'start_time': tz_local(log.start_time),
-        })
+        if log:
+            devices.append({
+                'id': device.id,
+                'name': device.name,
+                'current_user': getattr(log, re.findall('user.?name', ''.join(log.__table__.columns.keys()))[0]),
+                'start_time': tz_local(log.start_time),
+            })
     return jsonify({"data": devices})
 
 
