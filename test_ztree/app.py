@@ -11,9 +11,27 @@ def index():
     return render_template('index.html')
 
 
-@app.route('/nodes')
+@app.route('/base')
+def base_page():
+    return render_template('base.html')
+
+
+@app.route('/nodes', methods=['POST'])
 def nodes():
-    return None
+    data = request.get_json(force=True)
+    id = str(data["id"])
+    ret_dict = {
+        "1": [{"name": "Table I--1", "id": "I_1", "pid": "0"},
+              {"name": "Table I--2", "id": "I_2", "pid": "0"},
+              {"name": "Table I--3", "id": "I_3", "pid": "0"}],
+        "2": [{"name": "Table II--1", "connect": "Table I--", "id": "II_1", "pid": "1"},
+              {"name": "Table II--2", "id": "II_2", "pid": "1"}],
+        "3": [{"name": "Table III--1", "id": "III_1", "pid": "2"},
+              {"name": "Table III--11", "id": "III_1_1", "pid": "III_1"},
+              {"name": "Table III--12", "id": "III_1_2", "pid": "III_1"},
+              {"name": "Table III--13", "id": "III_1_3", "pid": "III_1"}]
+    }
+    return jsonify(ret_dict.get(id))
 
 
 if __name__ == '__main__':
