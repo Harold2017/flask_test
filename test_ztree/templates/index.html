@@ -1,0 +1,47 @@
+{% block head %}
+
+<link rel="stylesheet" href="{{ url_for('static', filename='css/zTreeStyle/zTreeStyle.css') }}">
+<script type="text/javascript" src="{{ url_for('static', filename='js/jquery-1.4.4.min.js') }}"></script>
+<script type="text/javascript" src="{{ url_for('static', filename='js/jquery.ztree.all.min.js') }}"></script>
+
+// can NOT inherit from parent page with jquery... which will leads to $.fn.zTree undefined...
+
+{% endblock %}
+
+{% block title %}Harold{% endblock %}
+
+{% block page_content %}
+
+<div class="box">
+    <ul id="treeDemo" class="ztree" style="wdith:230px; overflow:auto;"></ul>
+    <ul id="ulright">
+        <li style="text-align: center; background-color: #ddd; border-bottom: 1px dashed"></li>
+    </ul>
+</div>
+
+<script>
+
+    var zTreeObj,
+	setting = {
+		view: {
+			selectedMulti: false
+		}
+	},
+	zTreeNodes = [
+		{"name":"网站导航", open:false, children: [
+			{ "name":"google", "url":"http://g.cn", "target":"_blank"},
+			{ "name":"baidu", "url":"http://baidu.com", "target":"_blank"},
+			{ "name":"sina", "url":"http://www.sina.com.cn", "target":"_blank"}
+			]
+		}
+	];
+
+	$(document).ready(function(){
+		zTreeObj = $.fn.zTree.init($("#treeDemo"), setting, zTreeNodes);
+
+	});
+</script>
+
+{% endblock %}
+
+
