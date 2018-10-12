@@ -12,7 +12,7 @@
 
 <div class="box">
     <ul id="treeDemo" class="ztree" style="wdith:230px; overflow:auto;"></ul>
-    <ul id="ulright">
+    <ul id="ul_display">
         <li style="text-align: center; background-color: #ddd; border-bottom: 1px dashed"></li>
     </ul>
 </div>
@@ -21,7 +21,23 @@
     //禁止拖拽到父节点前面的操作
     function canPrev(treeId, nodes, targetNode) {
 	    return !targetNode.isParent;
-    }
+    };
+
+    //递归找到所有非父节点
+    function getAllChildrenNodes(treeNode, result){
+        if (treeNode.isParent){
+            var childrenNodes = treeNode.children;
+            if (childrenNodes){
+                for (var i=0; i<childrenNodes.length; i++){
+                    if (!childrenNodes[i].children){
+                        result.push(childrenNodes[i].name);
+                    }
+                    result = getAllChildrenNodes(childrenNodes[i], result);
+                }
+            }
+        }
+        return result;
+    };
 
     var zTreeObj,
 	setting = {
@@ -173,7 +189,119 @@
 
             //回调成功事件
             onAsyncSuccess: function(event, treeId, treeNode, msg){
-                alert(msg);
+                //alert(msg);
+                var zTree = $.fn.zTree.getZTreeObj("treeDemo");
+                var count = treeNode.children.length;
+                //console.log(count);
+                //console.log(treeNode.name);
+                //加载成功后;在节点后面显示此父节点下有几个一级子节点
+                var node = $("a[title='"+treeNode.name+"']");
+                node.text(treeNode.name+'('+count+')');
+            },
+            //用于捕获节点被展开的事件回调函数
+            onExpand: function(event, treeId, treeNode){
+                var zTree = $.fn.zTree.getZTreeObj("treeDemo");
+                var expandedId = treeNode.id;
+                var allNodes = zTree.getNodes();
+                var expandedLevel = treeNode.level;
+
+                function filter_nodes_with_same_level_and_has_children(node){
+                    return (node.level == treeNode.level && node.isParent);
+                };
+                var nodes_with_same_level_and_has_children = zTree.getNodesByFilter(filter_nodes_with_same_level_and_has_children);
+
+                for (var i=0; i<nodes_with_same_level_and_has_children.length; i++){
+                    if (nodes_with_same_level_and_has_children[i].id != expandedId){
+                        zTree.expandNode(nodes_with_same_level_and_has_children[i], false, true, true);
+                    };
+                };
+            },
+            //用于捕获节点被点击的事件回调函数, 如果设置了 setting.callback.beforeClick 方法，且返回 false，将无法触发 onClick 事件回调函数。默认值：null
+            onClick: function(event, treeId, treeNode){
+
+                var zTree = $.fn.zTree.getZTreeObj("treeDemo");
+
+                //点击文字关联复选框
+                //如果不是父节点,则关联,或者是父节点,但展开状态位true是,也关联;
+                if (!treeNode.isParent || (treeNode.isParent && treeNode.open)){
+                    zTree.checkNode(treeNode, !treeNode.checked, true); //勾选 或 取消勾选 单个节点
+                };
+
+                //展开当前节点
+                zTree.expandNode(treeNode, true, true, true);
+
+                //手风琴效果;直接调用onExpand
+                zTree.setting.callback.onExpand(event, treeId, treeNode);
+
+
+                //点击节点名称和勾选节点前面的复选框逻辑相同;
+                //直接在onClick里面调用onCheck函数;并传入所需参数
+                zTree.setting.callback.onCheck(event, treeId, treeNode);
+            },
+            //用于捕获 checkbox / radio 被勾选 或 取消勾选的事件回调函数
+            onCheck: function(e, treeId, treeNode){
+                //获取ul_display内所有li标签;用于比较当前选择复选框是否存在
+                var bottomLis = $("#ul_display").find("li");
+                //选中的是底层节点;
+                if (!treeNode.isParent){
+                    if (treeNode.checked){
+                        for (var i=0; i<bottomLis.length; i++){
+                            if ($(bottomLis[i]).attr("title") == treeNode.name){
+                                return;
+                            }
+                        }
+                        var addLi = $("<li title='"+treeNode.name+"'><span></span>");
+                        addLi.find("span").text(treeNode.name);
+                        addLi.animate({
+                            width: "100%",
+                            height: "30"
+                        }, 400);
+                        addLi.appendTo($("#ul_display"));
+                        $("#treeDemo").find("a[title='"+treeNode.name+"']").css("backgroundColor", "#42f4b9");
+                    }else{
+                        $("#ul_display").find("li[title='"+treeNode.name+"']").animate({
+                            width: "0%",
+                            height: "0"
+                        }, 400, function(){
+                            $("#ul_display").find("li[title='"+treeNode.name+"']").remove();
+                        });
+                        $("#treeDemo").find("a[title='"+treeNode.name+"']").css("backgroundColor", "");
+                    }
+                }else{
+                    //选中的是父节点;获取所有子节点(非父节点),判断复选框状态加入到ul或删除
+                    var childrenNodesArray = getAllChildrenNodes(treeNode, []);
+                    console.log(childrenNodesArray);
+                    if (treeNode.checked){
+                        var bottomLiArray = [];
+                        $("#ul_display li").each(function(index, element){
+                            bottomLiArray.push($(element).attr("title"));
+                        });
+                        console.log(bottomLiArray);
+                        bottomLiArray = bottomLiArray.slice(1);
+                        for (var i=0; i<childrenNodesArray.length; i++){
+                            if (bottomLiArray.indexOf(childrenNodesArray[i]) == -1){
+                                var addLi = $("<li title='"+childrenNodesArray[i]+"'><span>"+childrenNodesArray[i]+"</span>");
+                                addLi.animate({
+                                    width: "100%",
+                                    height: "30"
+                                }, 400);
+                                addLi.appendTo($("ul_display"));
+                            }
+                            $("#treeDemo").find("a[title='"+childrenNodesArray[i]+"']").css("background", "#42f4b9");
+                        }
+                    }else{
+                        for (var i=0; i<childrenNodesArray.length; i++){
+                            $("#ul_display").find("li[title='"+childrenNodesArray[i]+"']").animate({
+                                width: "0%",
+                                height: "0"
+                            }, function(){
+                                $(this).css("display", "none");
+                                $(this).remove();
+                            })
+                            $("#treeDemo").find("a[title='"+childrenNodesArray[i]+"']").css("backgroundColor", "");
+                        }
+                    }
+                }
             },
 		}
 	},

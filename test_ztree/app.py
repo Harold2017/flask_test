@@ -19,7 +19,7 @@ def base_page():
 def nodes():
     data = request.get_json(force=True)
     id = str(data["id"])
-    print(id)
+    # print(id)
     ret_dict = {
         "1": [{"name": "Table I--1", "id": "I_1", "pid": "1"},
               {"name": "Table I--2", "id": "I_2", "pid": "1"},
