@@ -1,0 +1,47 @@
+Use Flask as backend server, MySQL as database
+
+Use Celery with Redis as MQ to inform user 15 minutes before tasks expire
+
+The project structure:
+.
+├── README
+├── app                       # Main App package
+│   ├── __init__.py           # Create app instance
+│   ├── api                   # API module to interact with task module
+│   │   ├── __init__.py
+│   │   └── views.py
+│   ├── auth                  # Auth module to handle user register / login / logout
+│   │   ├── __init__.py
+│   │   ├── forms.py
+│   │   └── views.py
+│   ├── main                  # Main module to handle main page and errors
+│   │   ├── __init__.py
+│   │   ├── errors.py
+│   │   └── views.py
+│   ├── models.py             # models
+│   ├── static                # static file folder
+│   │   └── styles.css
+│   ├── task                  # Task module to handle user task calendar
+│   │   ├── __init__.py
+│   │   └── views.py
+│   ├── templates             # templates folder
+│   │   ├── 403.html
+│   │   ├── 404.html
+│   │   ├── 500.html
+│   │   ├── auth
+│   │   │   ├── login.html
+│   │   │   └── register.html
+│   │   ├── base.html
+│   │   ├── index.html
+│   │   └── tasks
+│   │       └── calendar.html
+│   └── utils.py              # utils used to generate token and create celery task
+├── config.py                 # App config module
+├── manage.py                 # App management script
+└── tests                     # Tests folder (Under Consideration)
+
+My API module for this app does not full-fill 'RESTful' requirement now due to time limit. But it is easy to transfer
+it into 'RESTful' later (adding PUT method and refactor methods / URI into a more abstract way like /api/v1.0/tasks with
+class tasks: get / post / put / delete .etc).
+
+Simple expiration notice is launched by simple celery task through logging.
