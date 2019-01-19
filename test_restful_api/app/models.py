@@ -1,8 +1,7 @@
 from sqlalchemy.exc import IntegrityError
 import logging
-from .app import db
+from . import db, utils
 from datetime import datetime, timedelta
-from . import utils
 from celery import uuid
 from celery.task.control import revoke
 
@@ -11,6 +10,9 @@ logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(message)s')
 
 
 class BaseModel:
+    """
+    Base Model to simplify db operation and ensure its atomicity
+    """
 
     def __commit(self):
         try:
@@ -32,11 +34,14 @@ class BaseModel:
 
 
 class Task(BaseModel, db.Model):
+    """
+    Simple Task table to store tasks in MySQL db
+    """
     __tablename__ = 'tasks'
     id = db.Column(db.Integer, primary_key=True)
     title = db.Column(db.String(128))
     description = db.Column(db.Text)
-    expiration = db.Column(db.DateTime())
+    expiration = db.Column(db.DateTime(), default=None)
     task_uuid = db.Column(db.String(64))
     is_finished = db.Column(db.Boolean, default=False)
 
@@ -53,7 +58,7 @@ class Task(BaseModel, db.Model):
     @staticmethod
     def get_task_by_id(task_id):
         task = Task.query.filter_by(id=task_id).first()
-        if len(task) == 0:
+        if not task:
             return None
         else:
             return task.to_json()
@@ -61,27 +66,47 @@ class Task(BaseModel, db.Model):
     @staticmethod
     def update_task_by_id(task_id, task_info):
         task = Task.query.filter_by(id=task_id).first()
-        for key, value in task_info:
+        for key, value in task_info.items():
             setattr(task, key, value)
+
+        if task.expiration:
+            # store local time here for simplification
+            task.expiration = datetime.strptime(task.expiration, '%Y-%m-%dT%H:%M:%S')
+
+            if task.task_uuid:
+                revoke(task.task_uuid, terminate=True)
+
+            task.task_uuid = uuid()
+            # celery use UTC time... so just input timedelta without timezone
+            countdown = (task.expiration - timedelta(0, 60 * 15, 0) - datetime.now()).total_seconds()
+            # task reminder 15 mins before expiration
+            utils.alert_logger.apply_async(args=[task.to_json()], countdown=countdown,
+                                           expires=countdown + 15 * 60, task_id=task.task_uuid)
+        if task.is_finished and task.task_uuid:
+            revoke(task.task_uuid, terminate=True)
+
         task.save()
 
     @staticmethod
     def insert_task(task_info):
         task = Task(**task_info)
-        task.task_uuid = uuid()
-        task.expiration = datetime.strptime(task.expiration, '%Y-%m-%dT%H:%M:%S')
+        if task.expiration:
+            task.task_uuid = uuid()
+            task.expiration = datetime.strptime(task.expiration, '%Y-%m-%dT%H:%M:%S')
 
-        countdown = (task.expiration - timedelta(0, 60 * 15, 0) - datetime.utcnow()).total_seconds()
+            # celery use UTC time... so just input timedelta without timezone
+            countdown = (task.expiration - timedelta(0, 60 * 15, 0) - datetime.now()).total_seconds()
 
-        # task reminder 15 mins before expiration
-        utils.alert_logger.apply_async(args=[task.to_json()], countdown=countdown,
-                                       expires=countdown + 15 * 60, task_id=task.task_uuid)
+            # task reminder 15 mins before expiration
+            utils.alert_logger.apply_async(args=[task.to_json()], countdown=countdown,
+                                           expires=countdown + 15 * 60, task_id=task.task_uuid)
         task.save()
 
     @staticmethod
     def delete_task_by_id(task_id):
         task = Task.query.filter_by(id=task_id).first()
-        revoke(task.task_uuid, terminate=True)
+        if task.task_uuid:
+            revoke(task.task_uuid, terminate=True)
         task.delete()
 
     @staticmethod

@@ -1,0 +1,106 @@
+Demo project structure:
+.
+├── README
+├── __init__.py
+├── app
+│   ├── __init__.py         # create_app factory function
+│   ├── api
+│   │   ├── __init__.py     # set blueprint
+│   │   ├── routes.py       # add api routes
+│   │   └── views.py        # handle requests
+│   ├── main
+│   │   ├── __init__.py     # set blueprint
+│   │   └── views.py        # simple hello world test for launching the server
+│   ├── models.py           # task model with some simple operation methods
+│   └── utils.py            # several utils functions
+├── config.py               # app config file
+└── manage.py               # execute entrance
+
+************************************************************************************************
+
+# Use flask-restful to design RESTful Task API
+# Use MySQL to store tasks data
+# Use celery with redis to handler warning demand 15 minutes before task expiration
+
+
+# GET to obtain one task
+GET: http://localhost:5000/api/task/3/
+
+# Receive and handle GET request at server side
+2019-01-19 23:44:41,647 - 127.0.0.1 - - [19/Jan/2019 23:44:41] "GET /api/task/3/ HTTP/1.1" 200 -
+
+# Return data to client
+{
+"id": 3,
+"title": "test2",
+"description": "this is a test description",
+"expiration": null,
+"task_uuid": null,
+"is_finished": false
+}
+
+************************************************************************************************
+
+# GET to obtain all tasks
+GET: http://localhost:5000/api/tasks/
+
+# Receive and handle GET request at server side
+2019-01-19 23:23:19,614 - 127.0.0.1 - - [19/Jan/2019 23:23:19] "GET /api/tasks/ HTTP/1.1" 200 -
+
+# Return data to client
+{
+"tasks":[
+{"id": 0, "title": null, "description": null, "expiration": null, "task_uuid": null,…}
+]
+}
+
+************************************************************************************************
+
+# PUT to update task with certain task_id
+PUT: http://localhost:5000/api/task/2/
+
+# Receive and handle PUT request at server side
+2019-01-19 23:26:05,486 - 127.0.0.1 - - [19/Jan/2019 23:26:05] "PUT /api/task/2/ HTTP/1.1" 200 -
+
+# Return success data to client
+{
+"status": "success"
+}
+
+************************************************************************************************
+
+# DELETE to delete task with certain task_id
+DELETE: http://localhost:5000/api/task/2/
+
+# Receive and handle DELETE request at server side
+2019-01-19 23:29:05,273 - 127.0.0.1 - - [19/Jan/2019 23:29:05] "DELETE /api/task/2/ HTTP/1.1" 200 -
+
+# Return success data to client
+{
+"status": "success"
+}
+
+************************************************************************************************
+
+# Post to add task at client side
+POST: http://localhost:5000/api/tasks/
+HEADERS: Content-Type: application/json
+BODY:
+{
+  "title": "test8",
+  "description": "this is a test description",
+  "expiration": "2019-01-19T23:34:00"
+}
+
+# Receive and handle POST request at server side
+2019-01-19 23:18:12,685 - 127.0.0.1 - - [19/Jan/2019 23:18:12] "POST /api/tasks/ HTTP/1.1" 200 -
+
+# add task to celery
+# celery execute task at scheduled time
+# celery use UTC time and my server and client use Asia/Shanghai timezone
+# simply show the warning info through logging
+[2019-01-19 23:18:12,655: INFO/MainProcess] Received task: app.utils.alert_logger[46e793bb-a214-4bb1-a744-e435bfb170eb]  ETA:[2019-01-19 15:19:00.000292+00:00]  expires:[2019-01-19 15:34:00.000292+00:00]
+[2019-01-19 23:19:01,032: WARNING/ForkPoolWorker-2] Task {'id': None, 'title': 'test8', 'description': 'this is a test description', 'task_uuid': '46e793bb-a214-4bb1-a744-e435bfb170eb', 'expiration': '2019-01-19T23:34:00', 'is_finished': None} executed!
+[2019-01-19 23:19:01,034: INFO/ForkPoolWorker-2] Task {'id': None, 'title': 'test8', 'description': 'this is a test description', 'task_uuid': '46e793bb-a214-4bb1-a744-e435bfb170eb', 'expiration': '2019-01-19T23:34:00', 'is_finished': None} of will expire in 15 mins
+[2019-01-19 23:19:01,035: WARNING/ForkPoolWorker-2] Task '46e793bb-a214-4bb1-a744-e435bfb170eb' successfully done!
+[2019-01-19 23:19:01,036: INFO/ForkPoolWorker-2] Task app.utils.alert_logger[46e793bb-a214-4bb1-a744-e435bfb170eb] succeeded in 0.004193531000055373s: None

@@ -2,7 +2,7 @@ from flask import request
 from hashlib import sha512
 from itsdangerous import URLSafeTimedSerializer as Serializer
 from itsdangerous import BadData
-from .app import celery
+from . import celery
 import logging
 
 
@@ -50,7 +50,11 @@ class MyTask(celery.Task):
     def on_failure(self, exc, task_id, args, kwargs, einfo):
         print('{0!r} failed: {1!r}'.format(task_id, exc))
 
+    def on_success(self, retval, task_id, args, kwargs):
+        print('Task {!r} successfully done!'.format(task_id))
+
 
 @celery.task(base=MyTask)
 def alert_logger(task):
+        print('Task {} executed!'.format(task))
         logging.info("Task {task} of will expire in 15 mins".format(task=task))
