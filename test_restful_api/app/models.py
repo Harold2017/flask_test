@@ -117,4 +117,4 @@ class Task(BaseModel, db.Model):
         res = []
         for task in tasks:
             res.append(task.to_json())
-        return {'tasks_list': res}
+        return res
