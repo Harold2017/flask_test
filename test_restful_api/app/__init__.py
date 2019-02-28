@@ -2,6 +2,7 @@ from flask import Flask, request
 from flask_sqlalchemy import SQLAlchemy
 from celery import Celery
 from config import Config
+from flasgger import Swagger
 
 
 db = SQLAlchemy()
@@ -17,6 +18,8 @@ def create_app():
     db.init_app(app)
 
     celery.conf.update(app.config)
+
+    Swagger(app)
 
     from .main import main as main_blueprint
     app.register_blueprint(main_blueprint)

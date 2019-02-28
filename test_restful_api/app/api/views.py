@@ -84,22 +84,97 @@ class TaskHandler(Resource):
 
     @marshal_with(response_fields)
     def get(self, task_id):
+        """
+        Get particular task by its ID
+        ---
+        tags:
+            - restful
+        parameters:
+            - in: path
+              name: task_id
+              required: true
+              description: The ID of the task, Integer
+              type: integer
+        responses:
+            200:
+              description: Task details
+              schema:
+                id: Task
+                properties:
+                  id:
+                    type: integer
+                    default: 0
+                  title:
+                    type: string
+                    default: My task
+                  description:
+                    type: string
+                    default: My task description
+                  expiration:
+                    type: string
+                    default: 2019-02-28T11:10:00
+                  task_uuid:
+                    type: string
+                    default: 263e00c3-835c-43ae-a32b-1bae2e879e40
+                  is_finished:
+                    type: bool
+                    default: false
+        """
         abort_if_not_exist(task_id)
         res = Task.get_task_by_id(task_id)
         return res, 200
 
     def put(self, task_id):
+        """
+        Edit particular task by its ID
+        ---
+        tags:
+            - restful
+        parameters:
+            - in: body
+              name: body
+              schema:
+                $ref: '#/definitions/Task'
+            - in: path
+              name: task_id
+              required: true
+              description: The ID of the task, Integer
+              type: integer
+        responses:
+            201:
+              description: The task `task_id` has been updated
+              schema:
+                $ref: '#/definitions/Task'
+        """
         abort_if_not_exist(task_id)
         args = self.req_parse()
         Task.update_task_by_id(task_id, args)
-        return {"status": "success"}, 200
+        return {"message": "The task " + task_id + " has been updated"}, 201
 
     def delete(self, task_id):
+        """
+        Delete particular task by its ID
+        ---
+        tags:
+            - restful
+        parameters:
+            - in: path
+              name: task_id
+              required: true
+              description: The ID of the task, Integer
+              type: integer
+        responses:
+            204:
+              description: The task `task_id` has been deleted
+        """
         abort_if_not_exist(task_id)
         Task.delete_task_by_id(task_id)
-        return {"status": "success"}, 200
+        return {"message": "The task " + task_id + " has been deleted"}, 204
 
     def post(self, task_id):
+        """
+        The same with GET method
+        """
         return self.get(task_id)
 
 
@@ -118,10 +193,42 @@ class TasksListHandler(Resource):
 
     @marshal_with(response_fields_list)
     def get(self):
+        """
+        Get all tasks
+        ---
+        tags:
+            - restful
+        responses:
+            200:
+              description: All tasks data in JSON array
+              schema:
+                id: Tasks
+                properties:
+                  tasks:
+                    type: array
+                    items:
+                      $ref: '#/definitions/Task'
+        """
         res = Task.get_tasks_list()
         return {'tasks': res}, 200
 
     def post(self):
+        """
+        Add task to tasks list
+        ---
+        tags:
+            - restful
+        parameters:
+            - in: body
+              name: body
+              schema:
+                $ref: '#/definitions/Task'
+        responses:
+            201:
+              description: The task has been created
+              schema:
+                $ref: '#/definitions/Task'
+        """
         args = self.req_parse()
         Task.insert_task(args)
-        return {"status": "success"}, 200
+        return {"message": "The task has been created"}, 201

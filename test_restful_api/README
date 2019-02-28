@@ -21,6 +21,7 @@ Demo project structure:
 # Use flask-restful to design RESTful Task API
 # Use MySQL to store tasks data
 # Use celery with redis to handler warning demand 15 minutes before task expiration
+# Use Flasgger to add Swagger UI, it can be accessed at `/apispec_1.json` endpoint
 
 
 # GET to obtain one task
