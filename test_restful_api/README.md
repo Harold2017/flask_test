@@ -1,5 +1,6 @@
 # Simple Todo project structure:
 ## Backend
+```bash
 .
 ├── README
 ├── __init__.py
@@ -17,8 +18,10 @@
 ├── config.py               # app config file
 └── manage.py               # execute entrance
 
+```
 
 ## React fontend
+```bash
 .
 ├── package.json
 ├── package-lock.json
@@ -43,7 +46,7 @@
     ├── reducers
     │   └── tasks.js
     └── serviceWorker.js
-
+```
 
 ************************************************************************************************
 
@@ -53,6 +56,7 @@
 
 ## Use Mariadb to store tasks data
 ### Task model:
+```json
 	{
             "id": 1,
             "title": "test_0",
@@ -61,17 +65,19 @@
             "task_uuid": "263e00c3-835c-43ae-a32b-1bae2e879e40",
             "is_finished": false
         }
+```
 ## Use celery with rabbitmq to send notification 15 minutes before task expiration
-## Use Flasgger to add Swagger UI, it can be accessed at `/apispec_1.json` endpoint
+## Try Swagger UI with JSON definition, it can be accessed at `/apispec_1.json` endpoint
 
 
 ## GET to obtain one task
-GET: http://localhost:8080/api/task/7/
+`GET: http://localhost:8080/api/task/7/`
 
 ### Receive and handle GET request at server side
-127.0.0.1 - - [01/Mar/2019:09:57:47 +0800] "GET /api/task/7/ HTTP/1.1" 200 212 "-" "PostmanRuntime/7.6.0"
+`127.0.0.1 - - [01/Mar/2019:09:57:47 +0800] "GET /api/task/7/ HTTP/1.1" 200 212 "-" "PostmanRuntime/7.6.0"`
 
 ### Return data to client
+```json
 {
     "id": 7,
     "title": "test_6",
@@ -80,15 +86,17 @@ GET: http://localhost:8080/api/task/7/
     "task_uuid": "ff7018e2-b805-4ee4-abd0-8ffd4b8b1bb2",
     "is_finished": false
 }
+```
 ************************************************************************************************
 
 ## GET to obtain all tasks
-GET: http://localhost:8080/api/tasks/
+`GET: http://localhost:8080/api/tasks/`
 
 ### Receive and handle GET request at server side
-2019-01-19 23:23:19,614 - 127.0.0.1 - - [19/Jan/2019 23:23:19] "GET /api/tasks/ HTTP/1.1" 200 -
+`2019-01-19 23:23:19,614 - 127.0.0.1 - - [19/Jan/2019 23:23:19] "GET /api/tasks/ HTTP/1.1" 200 -`
 
 ### Return data to client
+```json
     "tasks": [
         {
             "id": 7,
@@ -108,22 +116,26 @@ GET: http://localhost:8080/api/tasks/
         }
     ]
 }
+```
 
 ************************************************************************************************
 
 ## PUT to update task with certain task_id
-PUT: http://localhost:8080/api/task/15/
+`PUT: http://localhost:8080/api/task/15/`
+```json
 body:
 	{
 		"title": "put to change title",
 		"description": "put to change description",
     		"is_finished": true
 	}
+```
 
 ### Receive and handle PUT request at server side
-127.0.0.1 - - [01/Mar/2019:10:11:34 +0800] "PUT /api/task/15/ HTTP/1.1" 201 49 "-" "PostmanRuntime/7.6.0"
+`127.0.0.1 - - [01/Mar/2019:10:11:34 +0800] "PUT /api/task/15/ HTTP/1.1" 201 49 "-" "PostmanRuntime/7.6.0"`
 
 ### Return success data to client
+```json
 {
     "message": "The task 15 has been updated",
     "task": {
@@ -135,36 +147,42 @@ body:
         "is_finished": true
     }
 }
+```
 
 ************************************************************************************************
 
 ## DELETE to delete task with certain task_id
-DELETE: http://localhost:8080/api/task/2/
+`DELETE: http://localhost:8080/api/task/2/`
 
 ### Receive and handle DELETE request at server side
-127.0.0.1 - - [01/Mar/2019:10:13:31 +0800] "DELETE /api/task/2/ HTTP/1.1" 204 0 "-" "PostmanRuntime/7.6.0"
+`127.0.0.1 - - [01/Mar/2019:10:13:31 +0800] "DELETE /api/task/2/ HTTP/1.1" 204 0 "-" "PostmanRuntime/7.6.0"`
 
 ### Return success message to client
+```json
 {
     "message": "The task 2 has been deleted"
 }
+```
 
 ************************************************************************************************
 
 ## Post to add task at client side
-POST: http://localhost:8080/api/tasks/
-HEADERS: Content-Type: application/json
+`POST: http://localhost:8080/api/tasks/`
+`HEADERS: Content-Type: application/json`
+```json
 BODY:
 {
 	"title": "test_6",
 	"description": "this is a test description",
 	"expiration": "2019-3-01T10:15:00"
 }
+```
 
 ### Receive and handle POST request at server side
-127.0.0.1 - - [01/Mar/2019:09:56:42 +0800] "POST /api/tasks/ HTTP/1.1" 201 47 "-" "PostmanRuntime/7.6.0"
+`127.0.0.1 - - [01/Mar/2019:09:56:42 +0800] "POST /api/tasks/ HTTP/1.1" 201 47 "-" "PostmanRuntime/7.6.0"`
 
 ### Add task to celery mq
+```bash
 [2019-03-01 10:36:48,820: INFO/MainProcess] Received task: app.utils.alert_logger[fd8504c6-3909-4737-b73b-a8ad74a1b25b]  ETA:[2019-03-01 02:40:00.005505+00:00]  expires:[2019-03-01 02:55:00.005505+00:00]
 ### celery execute task at scheduled time
 ### celery use UTC time and my server and client use Asia/Shanghai timezone
@@ -173,11 +191,14 @@ BODY:
 [2019-03-01 10:40:00,238: INFO/ForkPoolWorker-5] Task {'id': 13, 'title': 'test_12', 'description': 'this is a test description', 'task_uuid': 'fd8504c6-3909-4737-b73b-a8ad74a1b25b', 'expiration': '2019-03-01T10:55:00', 'is_finished': False} of will expire in 15 mins
 [2019-03-01 10:40:00,238: WARNING/ForkPoolWorker-5] Task 'fd8504c6-3909-4737-b73b-a8ad74a1b25b' successfully done!
 [2019-03-01 10:40:00,238: INFO/ForkPoolWorker-5] Task app.utils.alert_logger[fd8504c6-3909-4737-b73b-a8ad74a1b25b] succeeded in 0.0013924500090070069s: None
+```
 
 ## Return success message to client
+```json
 {
     "message": "The task 11 has been created"
 }
+```
 
 
 # React fontend
