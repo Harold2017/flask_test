@@ -9,10 +9,10 @@ class ExpirationDateTimeCase(fields.Raw):
     """
     def format(self, value):
         try:
-            print(value)
+            # print(value)
             return datetime.strftime(value, '%Y-%m-%dT%H:%M:%S') if value else str(value)
         except Exception:
-            raise fields.MarshallingException
+            raise fields.MarshallingException('Can NOT format this datetime field')
 
 
 # confine response structure
@@ -79,6 +79,7 @@ class TaskHandler(Resource):
         parser.add_argument('title', type=str, help='task title', location='json', required=True)
         parser.add_argument('description', type=str, help='task description', location='json', required=True)
         parser.add_argument('expiration', type=str, help='expiration time', location='json')
+        parser.add_argument('is_finished', type=bool, help='task completeness', location='json')
         args = parser.parse_args()
         return args
 
@@ -122,6 +123,7 @@ class TaskHandler(Resource):
         """
         abort_if_not_exist(task_id)
         res = Task.get_task_by_id(task_id)
+        print(res)
         return res, 200
 
     def put(self, task_id):
@@ -148,8 +150,10 @@ class TaskHandler(Resource):
         """
         abort_if_not_exist(task_id)
         args = self.req_parse()
-        Task.update_task_by_id(task_id, args)
-        return {"message": "The task " + task_id + " has been updated"}, 201
+        task_json = Task.update_task_by_id(task_id, args)
+        res = {"message": "The task " + task_id + " has been updated", "task": task_json}
+        print(res)
+        return res, 201
 
     def delete(self, task_id):
         """
@@ -230,5 +234,5 @@ class TasksListHandler(Resource):
                 $ref: '#/definitions/Task'
         """
         args = self.req_parse()
-        Task.insert_task(args)
-        return {"message": "The task has been created"}, 201
+        task_id = Task.insert_task(args)
+        return {"message": "The task " + str(task_id) + " has been created"}, 201

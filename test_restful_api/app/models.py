@@ -66,33 +66,42 @@ class Task(BaseModel, db.Model):
     @staticmethod
     def update_task_by_id(task_id, task_info):
         task = Task.query.filter_by(id=task_id).first()
-        for key, value in task_info.items():
-            setattr(task, key, value)
+        new_task = {key: value for key, value in task_info.items() if key not in ('expiration', 'task_uuid')}
 
-        if task.expiration:
+        if task_info.expiration:
             # store local time here for simplification
-            task.expiration = datetime.strptime(task.expiration, '%Y-%m-%dT%H:%M:%S')
+            task.expiration = datetime.strptime(task_info.expiration, '%Y-%m-%dT%H:%M:%S')
 
             if task.task_uuid:
                 revoke(task.task_uuid, terminate=True)
-
             task.task_uuid = uuid()
+
             # celery use UTC time... so just input timedelta without timezone
             countdown = (task.expiration - timedelta(0, 60 * 15, 0) - datetime.now()).total_seconds()
             # task reminder 15 mins before expiration
             utils.alert_logger.apply_async(args=[task.to_json()], countdown=countdown,
                                            expires=countdown + 15 * 60, task_id=task.task_uuid)
+        for key, value in new_task.items():
+            setattr(task, key, value)
+
+        task.save()
+
         if task.is_finished and task.task_uuid:
             revoke(task.task_uuid, terminate=True)
 
-        task.save()
+        task_json = task.to_json()
+        task_json['expiration'] = datetime.strftime(task_json['expiration'], '%Y-%m-%dT%H:%M:%S') \
+            if task_json['expiration'] else str(task_json['expiration'])
+
+        return task_json
 
     @staticmethod
     def insert_task(task_info):
         task = Task(**task_info)
-        if task.expiration:
+        if task.expiration and not task.is_finished:
             task.task_uuid = uuid()
             task.expiration = datetime.strptime(task.expiration, '%Y-%m-%dT%H:%M:%S')
+            task.save()
 
             # celery use UTC time... so just input timedelta without timezone
             countdown = (task.expiration - timedelta(0, 60 * 15, 0) - datetime.now()).total_seconds()
@@ -100,7 +109,7 @@ class Task(BaseModel, db.Model):
             # task reminder 15 mins before expiration
             utils.alert_logger.apply_async(args=[task.to_json()], countdown=countdown,
                                            expires=countdown + 15 * 60, task_id=task.task_uuid)
-        task.save()
+        return task.id
 
     @staticmethod
     def delete_task_by_id(task_id):
